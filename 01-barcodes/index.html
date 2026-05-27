@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barcodes: Wander · Cache · Recall</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&display=swap');
+  :root{
+    --bg:#f4f1ea;--card:#fbfaf6;--ink:#1f2933;--dim:#5a646f;--line:#e2ddd2;
+    --place:#1f9bb3;--barcode:#e85d2a;--seed:#c79a1e;--good:#2f9e63;
+    --glow-place:rgba(31,155,179,.18);--glow-bar:rgba(232,93,42,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Spline Sans Mono',monospace;
+    line-height:1.55;-webkit-font-smoothing:antialiased;}
+  body{background-image:radial-gradient(900px circle at 20% -10%,#ece7da 0%,transparent 55%),
+    radial-gradient(700px circle at 100% 110%,#f0e6dd 0%,transparent 50%);
+    min-height:100vh;padding:clamp(10px,2vw,28px);}
+  .wrap{max-width:780px;margin:0 auto;}
+  .kick{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--seed);margin-bottom:6px;}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(28px,5vw,44px);line-height:1;
+    letter-spacing:-.02em;margin-bottom:8px;}
+  .lede{color:var(--dim);font-size:13.5px;max-width:600px;margin-bottom:12px;}
+  .lede b{color:var(--place);font-weight:500;}.lede i{color:var(--barcode);font-style:normal;font-weight:500;}
+
+  /* stage */
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:16px 18px 14px;position:relative;overflow:hidden;
+    box-shadow:0 1px 2px rgba(31,41,51,.04),0 12px 32px -16px rgba(31,41,51,.12);}
+  .stage::before{content:'';position:absolute;inset:0;background:var(--bgwash,transparent);
+    transition:background .5s ease;pointer-events:none;z-index:0;}
+  .phase-title{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin-bottom:3px;position:relative;
+    transition:color .4s;margin-top:2px;}
+  .phase-desc{font-size:12.5px;color:var(--dim);height:36px;overflow:hidden;position:relative;margin-bottom:4px;}
+  @media(max-width:560px){.phase-desc{height:54px;}}
+
+  .phase-desc b{font-weight:500;}
+
+  canvas{width:100%;display:block;position:relative;z-index:1;}
+  .cluster-cv{width:100%;display:block;margin-top:4px;border-radius:10px;}
+  .cluster-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;margin-bottom:0;}
+  .cluster-label{font-size:12.5px;font-weight:500;color:var(--dim);letter-spacing:.02em;}
+  .recurrence-status{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--seed);opacity:0;transition:opacity .6s ease;font-weight:500;}
+  .recurrence-status.visible{opacity:1;}
+  .show-stored{background:none;border:1px solid var(--line);border-radius:8px;
+    padding:4px 12px;font-family:inherit;font-size:11px;color:var(--dim);cursor:pointer;transition:.2s;letter-spacing:.04em;}
+  .show-stored:not(:disabled):hover{border-color:var(--barcode);color:var(--barcode);}
+  .show-stored.active{border-color:var(--barcode);color:var(--barcode);background:rgba(232,93,42,.06);}
+  .show-stored:disabled{opacity:.3;cursor:default;}
+  #track{height:56px;margin:4px 0 2px;}
+  #pop{height:140px;}
+  .popwrap{position:relative;padding-left:24px;}
+  .ylabel{position:absolute;left:12px;top:50%;transform-origin:center center;transform:translate(-50%,-50%) rotate(-90deg);
+    font-size:13px;font-weight:500;letter-spacing:.04em;color:var(--dim);white-space:nowrap;z-index:2;pointer-events:none;opacity:.9;}
+  .poplabel span{letter-spacing:.08em;}
+  .axis{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);
+    letter-spacing:.05em;position:relative;margin-top:-14px;}
+  .poplabel{justify-content:center;margin-top:-2px;}
+
+  .readout{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--dim);
+    margin-top:12px;position:relative;min-height:18px;}
+  .readout b{color:var(--ink);font-weight:600;}
+  .readout .hit{color:var(--good);font-weight:600;}
+
+  /* buttons */
+  .btns{display:flex;gap:10px;align-items:stretch;margin-top:0;}
+  .btns .act{flex:1;}
+  @media(max-width:560px){.btns{flex-wrap:wrap;}.btns .act{flex:1 1 40%;}.btns .reset{flex:0 0 auto;}}
+  button.act{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink);
+    font-family:inherit;font-size:14px;font-weight:500;padding:15px 14px;border-radius:12px;cursor:pointer;
+    transition:.18s;display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;}
+  button.act .b-sub{font-size:10.5px;letter-spacing:.04em;color:var(--dim);font-weight:400;}
+  button.act:hover:not(:disabled){transform:translateY(-2px);border-color:var(--hov);}
+  button.act:disabled{opacity:.4;cursor:not-allowed;}
+  #bWander{--hov:var(--place);} #bWander:hover:not(:disabled){box-shadow:0 6px 20px -8px var(--glow-place);}
+  #bCache{--hov:var(--barcode);} #bCache:hover:not(:disabled){box-shadow:0 6px 20px -8px var(--glow-bar);}
+  #bRecall{--hov:var(--good);}
+  button.act.armed{border-color:var(--hov);background:#fdfcf8;}
+  .pulse{animation:pulse 1.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 transparent;}50%{box-shadow:0 0 0 3px var(--glow-bar);}}
+
+  /* recall emphasis */
+  .recall-banner{display:none;align-items:center;gap:10px;margin-top:12px;padding:11px 14px;border-radius:11px;
+    background:rgba(47,158,99,.10);border:1px solid rgba(47,158,99,.45);position:relative;
+    font-size:13px;color:var(--good);font-weight:600;}
+  .recall-banner.miss{background:rgba(232,93,42,.09);border-color:rgba(232,93,42,.4);color:var(--barcode);}
+  .recall-banner.show{display:flex;animation:bannerIn .4s ease-out;}
+  @keyframes bannerIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .recall-banner .rb-icon{font-size:17px;line-height:1;}
+  .recall-banner .rb-sub{font-weight:400;color:var(--dim);font-size:11.5px;}
+
+  .reset{margin-top:0;background:none;border:none;color:var(--dim);font-family:inherit;font-size:12px;
+    cursor:pointer;text-decoration:underline;text-underline-offset:3px;white-space:nowrap;}
+  .reset:hover{color:var(--ink);}
+
+  .foot{margin-top:26px;font-size:11px;color:var(--dim);opacity:1;line-height:1.6;}
+  .foot code{color:#9a7a12;background:#f0ebdd;padding:1px 5px;border-radius:4px;font-size:10px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:10px;position:relative;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:10px;height:10px;border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kick">A recurrent neural network model of memory</div>
+  <h1>Wander · Cache · Recall</h1>
+  <p class="lede">When chickadees stash their seeds, the same part of their brain that tells them
+    <b>where they are</b> forms a <i>barcode</i> that's linked to the storage site, so they can later
+    <span style="color:var(--good)">recall it</span> from the place cue alone.</p>
+
+  <div class="stage" id="stage">
+    <div class="btns" style="margin-bottom:10px;">
+      <button class="act" id="bWander">Wandering
+        <span class="b-sub">recurrence off · place code</span></button>
+      <button class="act" id="bCache" disabled>Cache a seed
+        <span class="b-sub">recurrence on · store barcode</span></button>
+      <button class="act" id="bRecall" disabled>Recall
+        <span class="b-sub">recurrence on · no seed</span></button>
+      <button class="reset" id="reset" style="align-self:center;margin:0 0 0 4px;">reset</button>
+    </div>
+
+    <div class="phase-title" id="ptitle">Pick a spot on the track</div>
+    <div class="phase-desc" id="pdesc">Click anywhere on the track to place the bird and run the network.</div>
+
+    <canvas id="track"></canvas>
+    <div class="axis"><span>0</span><span>← click to place →</span><span>100</span></div>
+
+    <div class="popwrap">
+      <span class="ylabel">neuron activity</span>
+      <canvas id="pop"></canvas>
+    </div>
+    <div class="axis poplabel"><span>← 800 RNN neurons, sorted by preferred location →</span></div>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--place)"></i> place code</span>
+      <span><i class="swatch" style="background:var(--barcode)"></i> barcode</span>
+      <span><i class="swatch" style="background:var(--good)"></i> recalled</span>
+    </div>
+    <div class="readout" id="readout"></div>
+    <div class="recall-banner" id="recallBanner"><span class="rb-icon" id="rbIcon">✓</span><span id="rbText"></span></div>
+    <div class="cluster-row">
+      <span class="cluster-label">Toy hippocampus model</span>
+      <span class="recurrence-status" id="recurrenceStatus"></span>
+      <button class="show-stored" id="bShowStored" disabled>show stored</button>
+    </div>
+    <canvas id="cluster" class="cluster-cv"></canvas>
+  </div>
+
+  <p class="foot">Live model from <a href="https://github.com/chingf/barcodes" target="_blank" style="color:var(--seed);text-decoration:underline;text-underline-offset:2px;"><code>chingf/barcodes</code></a> (Fang et al., 2025, <i>eLife</i>): divisive-normalized
+    RNN dynamics with one-shot Hebbian storage. 800 neurons, 100-state circular track — scaled down from the paper's
+    5000 to run in-browser.</p>
+  <p class="foot" style="margin-top:8px;">Adapted by Chenguang Li for <a href="https://ccli.substack.com" target="_blank" style="color:var(--seed);text-decoration:underline;text-underline-offset:2px;">Dendrite @ Substack</a>.</p>
+</div>
+
+<script>
+/* ===== FAITHFUL MODEL CORE (port of chingf/barcodes Model.py) ===== */
+function relu(x){return x>0?x:0;}
+function dist(a,b,m){let d=Math.abs(a-b);return Math.min(d,Math.abs(m-d));}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let RAND=mulberry32(7);
+function randn(){let u=0,v=0;while(u===0)u=RAND();while(v===0)v=RAND();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+const NS=100, SITE=8, N=800, SIGMA=7.0;
+const WB=-40, DIVN=20.0, STEPS=100, SEED_STEPS=5, DT=0.1, LR=40.0, PB=-0.35, SSC=5.0;
+let cacheLoc=50;          // selectable location of the bird / cache
+let P=[], Jxx=[], Jsx=null, Jxy=[], Jxs=null, prefOrder=null;
+let hasMemory=false;
+
+function buildPlace(){P=[];
+  for(let s=0;s<NS;s++){const row=new Float64Array(N);const peak=Math.floor(s/NS*N);let mean=0;
+    for(let n=0;n<N;n++){row[n]=Math.exp(-(dist(n,peak,N)/(N*0.2)));mean+=row[n];}
+    mean/=N;let sd=0;for(let n=0;n<N;n++)sd+=(row[n]-mean)**2;sd=Math.sqrt(sd/N);
+    for(let n=0;n<N;n++)row[n]=(row[n]-mean)/sd;P.push(row);}}
+function buildWeights(){const sc=SIGMA/Math.sqrt(N);
+  Jxx=Array.from({length:N},()=>new Float64Array(N));
+  for(let i=0;i<N;i++){const Ji=Jxx[i];for(let j=0;j<N;j++)Ji[j]=sc*randn()+WB/N;}
+  Jsx=new Float64Array(N);for(let i=0;i<N;i++)Jsx[i]=randn();
+  Jxy=Array.from({length:N},()=>new Float64Array(N));Jxs=new Float64Array(N);hasMemory=false;}
+function reseed(seed){RAND=mulberry32(seed>>>0);buildPlace();buildWeights();computePrefOrder();}
+function computePrefOrder(){const score=new Float64Array(N);
+  // continuous preferred location per neuron via circular mean of its tuning across states.
+  // avoids 8-wide ties (NS=100 vs N=800) that produced a sawtooth at the chart edges.
+  for(let n=0;n<N;n++){let sx=0,sy=0;
+    for(let s=0;s<NS;s++){const w=Math.max(0,P[s][n]);const a=2*Math.PI*s/NS;sx+=w*Math.cos(a);sy+=w*Math.sin(a);}
+    let ang=Math.atan2(sy,sx);if(ang<0)ang+=2*Math.PI;score[n]=ang;}
+  prefOrder=[...Array(N).keys()].sort((a,b)=>score[a]-score[b]);}
+
+function makeRun(state,r,seedOn){
+  // returns a stepper object you can advance one timestep at a time.
+  const inp=P[state];
+  const pre=new Float64Array(N),act=new Float64Array(N),rec=new Float64Array(N);
+  const total=STEPS+(seedOn?SEED_STEPS:0);
+  let i=0;
+  function step(){
+    const ws = seedOn && i>=STEPS;        // seed input turns on for the final SEED_STEPS
+    let sum=0;for(let n=0;n<N;n++)sum+=act[n];const decay=1-DIVN*sum/N*DT;
+    rec.fill(0);for(let m=0;m<N;m++){const am=act[m];if(am!==0){const Jm=Jxx[m];for(let n=0;n<N;n++)rec[n]+=am*Jm[n];}}
+    for(let n=0;n<N;n++){let v=pre[n]*decay+DT*r*rec[n]+DT*inp[n];if(ws)v+=DT*Jsx[n]*SSC;pre[n]=v;act[n]=relu(v);}
+    i++;
+  }
+  return {act, total, done:()=>i>=total, step};
+}
+function runState(state,r,seedOn){      // synchronous: run to completion (used for wandering / calibration)
+  const run=makeRun(state,r,seedOn);
+  while(!run.done())run.step();
+  return run.act;
+}
+// animated: advance several steps per frame, redraw each frame, then call onDone(finalAct)
+let animHandle=null;
+function animateState(state,r,seedOn,color,overlay,onProgress,onDone,opts){
+  if(animHandle)cancelAnimationFrame(animHandle);
+  opts=opts||{};
+  const run=makeRun(state,r,seedOn);
+  const stepsPerFrame=opts.stepsPerFrame||Math.max(1,Math.round(run.total/45));
+  const stopOnConverge=!!opts.stopOnConverge;
+  // optionally hold a fixed vertical scale (the converged max) so growth is visible
+  let fixedMax=0;
+  if(opts.fixedScale){const fin=runState(state,r,seedOn);for(let n=0;n<N;n++)if(fin[n]>fixedMax)fixedMax=fin[n];}
+  let prevSum=-1, fcount=0;
+  const frameSkip=Math.max(1,opts.frameSkip||1);
+  const tick=()=>{
+    const stepped = (fcount++ % frameSkip)===0;
+    if(stepped){
+      for(let k=0;k<stepsPerFrame && !run.done();k++)run.step();
+    }
+    drawPop(run.act,color,overlay,fixedMax||undefined);
+    drawCluster(run.act,color);
+    if(onProgress)onProgress(run.act);
+    // optional early stop once activity stabilizes (the r=0 bump converges in a few steps)
+    let converged=false;
+    if(stopOnConverge && stepped){let s=0;for(let n=0;n<N;n++)s+=run.act[n];
+      if(prevSum>=0 && Math.abs(s-prevSum)<1e-3*Math.max(1,prevSum))converged=true;prevSum=s;}
+    if(!run.done() && !converged){animHandle=requestAnimationFrame(tick);}
+    else{animHandle=null;if(onDone)onDone(run.act);}
+  };
+  animHandle=requestAnimationFrame(tick);
+}
+function hebbUpdate(state,act){const pv=P[state];
+  for(let i=0;i<N;i++){const c=pv[i];const Ji=Jxy[i];for(let n=0;n<N;n++)Ji[n]+=c*act[n];}
+  for(let n=0;n<N;n++)Jxs[n]+=act[n];
+  const f=LR/N;for(let i=0;i<N;i++){const ai=(act[i]+PB)*f;const Ji=Jxx[i];for(let n=0;n<N;n++)Ji[n]+=ai*act[n];}
+  hasMemory=true;}
+function corr(a,b){let n=a.length,ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i];mb+=b[i];}ma/=n;mb/=n;
+  let nu=0,da=0,db=0;for(let i=0;i<n;i++){const u=a[i]-ma,w=b[i]-mb;nu+=u*w;da+=u*u;db+=w*w;}
+  return (da<1e-12||db<1e-12)?0:nu/Math.sqrt(da*db);}
+
+// readouts learned during caching
+function seedOutput(act){let v=0;for(let n=0;n<N;n++)v+=act[n]*Jxs[n];return v;}
+function placeOutput(act){           // returns decoded location via place readout
+  const out=new Float64Array(N);
+  for(let i=0;i<N;i++){let v=0;const Ji=Jxy[i];for(let n=0;n<N;n++)v+=Ji[n]*act[n];out[i]=v;}
+  let bestS=0,bestC=-2;
+  for(let s=0;s<NS;s++){const c=corr(out,P[s]);if(c>bestC){bestC=c;bestS=s;}}
+  return bestS;
+}
+// max seed output anywhere, to normalize "confidence" (cached lazily per network)
+let seedNorm=1;
+function calibrateSeedNorm(){let mx=0;for(let s=0;s<NS;s++){const v=seedOutput(runState(s,1,false));if(v>mx)mx=v;}seedNorm=mx||1;}
+
+/* ===== RENDER ===== */
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+function hi(cv){const dpr=window.devicePixelRatio||1;
+  let w=cv.clientWidth, h=cv.clientHeight;
+  if(!w) w=cv.parentElement.clientWidth||700;
+  if(!h) h=parseInt(getComputedStyle(cv).height)||(cv.id==='track'?68:184);
+  cv.width=w*dpr;cv.height=h*dpr;const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx,w,h};}
+
+let caches=[];          // [{loc, pattern}] — each stored memory
+let lastPop=null, lastColor=null, lastOverlay=null;
+let wanderingNow=false; // true while in r=0 wandering phase (track draggable)
+
+function drawBird(ctx,x,y,s,facingRight){
+  // small stylized chickadee-ish bird, height ~2*s
+  ctx.save();
+  ctx.translate(x,y);
+  if(!facingRight) ctx.scale(-1,1);
+  // tail
+  ctx.fillStyle='#3a4650';
+  ctx.beginPath();ctx.moveTo(-s*0.7,-s*0.1);ctx.lineTo(-s*1.5,-s*0.5);ctx.lineTo(-s*1.4,s*0.25);ctx.closePath();ctx.fill();
+  // body
+  ctx.fillStyle='#54616c';
+  ctx.beginPath();ctx.ellipse(0,0,s*0.95,s*0.7,0,0,7);ctx.fill();
+  // belly
+  ctx.fillStyle='#e9e2d2';
+  ctx.beginPath();ctx.ellipse(s*0.15,s*0.18,s*0.6,s*0.45,0,0,7);ctx.fill();
+  // wing
+  ctx.fillStyle='#414d57';
+  ctx.beginPath();ctx.ellipse(-s*0.1,-s*0.02,s*0.5,s*0.32,-0.25,0,7);ctx.fill();
+  // head (black cap)
+  ctx.fillStyle='#2b3138';
+  ctx.beginPath();ctx.arc(s*0.7,-s*0.5,s*0.5,0,7);ctx.fill();
+  // cheek
+  ctx.fillStyle='#f3eee0';
+  ctx.beginPath();ctx.arc(s*0.78,-s*0.38,s*0.26,0,7);ctx.fill();
+  // eye
+  ctx.fillStyle='#1b1f24';
+  ctx.beginPath();ctx.arc(s*0.82,-s*0.55,s*0.09,0,7);ctx.fill();
+  // beak
+  ctx.fillStyle=css('--seed');
+  ctx.beginPath();ctx.moveTo(s*1.15,-s*0.5);ctx.lineTo(s*1.5,-s*0.4);ctx.lineTo(s*1.13,-s*0.28);ctx.closePath();ctx.fill();
+  // legs
+  ctx.strokeStyle='#7a6a4a';ctx.lineWidth=Math.max(s*0.12,1);
+  ctx.beginPath();ctx.moveTo(-s*0.05,s*0.65);ctx.lineTo(-s*0.05,s*1.05);
+  ctx.moveTo(s*0.3,s*0.65);ctx.lineTo(s*0.3,s*1.05);ctx.stroke();
+  ctx.restore();
+}
+
+function drawTrack(highlightCache,birdLoc){
+  const {ctx,w,h}=hi(document.getElementById('track'));ctx.clearRect(0,0,w,h);
+  const cy=h*0.62, pad=18;
+  const X=loc=>pad+(loc/99)*(w-2*pad);
+  const bLoc=(birdLoc==null)?cacheLoc:birdLoc;
+  // track line
+  ctx.strokeStyle=css('--line');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(pad,cy);ctx.lineTo(w-pad,cy);ctx.stroke();
+  // ticks
+  ctx.fillStyle=css('--line');for(let s=0;s<=99;s+=10){const x=X(s);ctx.fillRect(x,cy-3,1,6);}
+  // persistent cache flags (one per stored seed), highlight the nearest to the bird
+  let nearestLoc=null,nd=1e9;
+  for(const m of caches){const d=Math.min(Math.abs(bLoc-m.loc),NS-Math.abs(bLoc-m.loc));if(d<nd){nd=d;nearestLoc=m.loc;}}
+  for(const m of caches){
+    const sx=X(m.loc), isNear=(m.loc===nearestLoc);
+    ctx.globalAlpha=isNear?1:0.5;
+    ctx.strokeStyle=css('--barcode');ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(sx,cy);ctx.lineTo(sx,cy-16);ctx.stroke();
+    ctx.fillStyle=css('--barcode');
+    ctx.beginPath();ctx.moveTo(sx,cy-16);ctx.lineTo(sx+11,cy-13);ctx.lineTo(sx,cy-10);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.arc(sx,cy+0.5,2.5,0,7);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+  // bird at current location, facing toward the nearest cache (or right by default)
+  const bx=X(bLoc);
+  const faceRight = (nearestLoc===null) ? true : (nearestLoc>=bLoc);
+  drawBird(ctx,bx,cy-13,7,faceRight);
+}
+
+function drawPop(act,color,overlay,fixedMax){
+  lastPop=act;lastColor=color;lastOverlay=overlay||null;
+  const {ctx,w,h}=hi(document.getElementById('pop'));ctx.clearRect(0,0,w,h);
+  if(!act){ctx.fillStyle=css('--dim');ctx.font="13px 'Spline Sans Mono'";ctx.textAlign='center';
+    ctx.fillText('click the track to run the network',w/2,h/2);ctx.textAlign='left';return;}
+  // shared scale across act + overlay so heights are comparable
+  let mx=0;
+  if(fixedMax&&fixedMax>0){mx=fixedMax;}
+  else{for(let i=0;i<N;i++)if(act[i]>mx)mx=act[i];
+    if(overlay)for(let i=0;i<N;i++)if(overlay[i]>mx)mx=overlay[i];}
+  if(mx<1e-9)mx=1;
+  const pad=8, base=h-20, bw=(w-pad*2)/N;
+  ctx.strokeStyle=css('--line');ctx.beginPath();ctx.moveTo(pad,base);ctx.lineTo(w-pad,base);ctx.stroke();
+  // faint stored barcode behind (for recall comparison)
+  if(overlay){
+    const oc=css('--barcode');
+    for(let k=0;k<N;k++){const i=prefOrder[k];const v=overlay[i]/mx;if(v<=0)continue;const bh=v*(base-8);
+      ctx.fillStyle=oc;ctx.globalAlpha=0.16+0.20*v;
+      ctx.fillRect(pad+k*bw,base-bh,Math.max(bw-0.3,0.6),bh);}
+    ctx.globalAlpha=1;
+  }
+  // main pattern on top
+  for(let k=0;k<N;k++){const i=prefOrder[k];const v=act[i]/mx;const bh=v*(base-8);
+    ctx.fillStyle=color;ctx.globalAlpha=(overlay?0.55:0.35)+0.45*v;
+    ctx.fillRect(pad+k*bw,base-bh,Math.max(bw-0.3,0.6),bh);}
+  ctx.globalAlpha=1;
+  // legend when comparing
+  if(overlay){
+    ctx.font="11px 'Spline Sans Mono'";ctx.textAlign='right';
+    ctx.fillStyle=css('--barcode');ctx.globalAlpha=.65;ctx.fillText('▮ stored barcode',w-pad,14);
+    ctx.globalAlpha=1;ctx.fillStyle=css('--good');ctx.fillText('▮ recalled',w-pad,28);
+    ctx.textAlign='left';
+  }
+}
+
+/* ===== CLUSTER VIEW ===== */
+const clCv=document.getElementById('cluster');
+const clCtx=clCv.getContext('2d');
+const CL_N=200;
+const CL_DPR=Math.min(window.devicePixelRatio||1,2);
+let clW=0,clH=0,clCells=[];
+function clResize(){
+  const cssW=clCv.parentElement.clientWidth-44;
+  const cssH=Math.round(cssW*0.28);
+  clCv.style.width=cssW+'px';clCv.style.height=cssH+'px';
+  clCv.width=cssW*CL_DPR;clCv.height=cssH*CL_DPR;
+  clCtx.setTransform(CL_DPR,0,0,CL_DPR,0,0);
+  clW=cssW;clH=cssH;clLayout();
+}
+function clLayout(){
+  clCells=[];
+  if(!prefOrder||!prefOrder.length)return;
+  const step=Math.floor(N/CL_N);
+  const cx=clW*0.5,cy=clH*0.50,rx=clW*0.47,ry=clH*0.44;
+  const R2=mulberry32(42);
+  let minD=rx*0.075, tries=0;
+  while(clCells.length<CL_N&&tries<40000){
+    tries++;
+    if(tries%8000===0)minD*=0.75;   // loosen spacing if struggling to fill
+    const u=R2()*2-1,v=R2()*2-1;
+    if(u*u+v*v>1)continue;
+    const x=cx+u*rx,y=cy+v*ry;
+    let ok=true;
+    for(const c of clCells){const dx=c.x-x,dy=c.y-y;if(dx*dx+dy*dy<minD*minD){ok=false;break;}}
+    if(!ok)continue;
+    clCells.push({x,y,ni:0});
+  }
+  // sort left→right, assign neurons by preferred location so left = low pref, right = high pref
+  clCells.sort((a,b)=>a.x-b.x);
+  for(let k=0;k<clCells.length;k++)clCells[k].ni=prefOrder[Math.min(k*step,N-1)];
+}
+function lerpRGB(a,b,t){return[a[0]+(b[0]-a[0])*t|0,a[1]+(b[1]-a[1])*t|0,a[2]+(b[2]-a[2])*t|0];}
+const C_SIL=[214,208,196];
+function hexToRGB(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function drawCluster(act,color){
+  if(!clCells.length||!clW)return;
+  if(showingStored)return;   // frozen; live updates don't overwrite
+  drawClusterRaw(act,color);
+}
+function drawClusterRaw(act,color){
+  if(!clCells.length||!clW)return;
+  clCtx.clearRect(0,0,clW,clH);
+  if(!act){return;}
+  let col=[31,155,179];
+  if(color){const m=color.match(/^#([0-9a-f]{6})$/i);if(m)col=hexToRGB(m[1]);}
+  let mx=0;for(const c of clCells)mx=Math.max(mx,act[c.ni]);
+  if(mx<1e-9)mx=1;
+  const r=Math.max(2.8,clW*0.012);
+  for(let i=0;i<clCells.length;i++){
+    const ci=clCells[i];
+    for(let j=i+1;j<clCells.length;j++){
+      const cj=clCells[j];
+      const dx2=ci.x-cj.x,dy2=ci.y-cj.y;
+      if(dx2*dx2+dy2*dy2>(r*7)**2)continue;
+      const m2=Math.min(act[ci.ni],act[cj.ni])/mx;
+      const edgeBoost=modEdge*0.03;
+      clCtx.strokeStyle=`rgba(${C_MOD[0]},${C_MOD[1]},${C_MOD[2]},${edgeBoost})`;
+      clCtx.lineWidth=0.4+0.6*modEdge;
+      clCtx.beginPath();clCtx.moveTo(ci.x,ci.y);clCtx.lineTo(cj.x,cj.y);clCtx.stroke();
+      clCtx.strokeStyle=`rgba(90,100,111,${0.04+0.2*m2})`;
+      clCtx.lineWidth=0.5+1.2*m2;
+      clCtx.beginPath();clCtx.moveTo(ci.x,ci.y);clCtx.lineTo(cj.x,cj.y);clCtx.stroke();
+    }
+  }
+  for(const c of clCells){
+    const v=act[c.ni]/mx;
+    const fill=lerpRGB(C_SIL,col,v);
+    if(v>0.12){
+      clCtx.beginPath();clCtx.arc(c.x,c.y,r+v*r*1.6,0,7);
+      clCtx.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${0.14*v})`;
+      clCtx.fill();
+    }
+    clCtx.beginPath();clCtx.arc(c.x,c.y,r+v*1.4,0,7);
+    clCtx.fillStyle=`rgb(${fill[0]},${fill[1]},${fill[2]})`;
+    clCtx.fill();
+  }
+}
+window.addEventListener('resize',clResize);
+
+/* ===== MODULATOR SIGNAL ===== */
+const C_MOD=[199,154,30];
+
+let modTint=0, modTintTarget=0, modTintRaf=null;
+function setModTint(target){
+  modTintTarget=target;
+  const lbl=document.getElementById('recurrenceStatus');
+  if(lbl){lbl.textContent='recurrence ↑';lbl.classList.toggle('visible',target>0);}
+  if(modTintRaf)return;
+  const tick=()=>{
+    const diff=modTintTarget-modTint;
+    if(Math.abs(diff)<0.005){modTint=modTintTarget;modTintRaf=null;return;}
+    modTint+=diff*0.08;
+    clCv.style.background=modTint>0.002
+      ?`rgba(${C_MOD[0]},${C_MOD[1]},${C_MOD[2]},${modTint*0.065})`:'';
+    modTintRaf=requestAnimationFrame(tick);
+  };
+  modTintRaf=requestAnimationFrame(tick);
+}
+
+// D: how strongly to boost edges when recurrence is on (0=off, 1=full)
+let modEdge=0, modEdgeTarget=0, modEdgeRaf=null;
+function setModEdge(target){
+  modEdgeTarget=target;
+  if(modEdgeRaf)return;
+  const tick=()=>{
+    const diff=modEdgeTarget-modEdge;
+    if(Math.abs(diff)<0.005){modEdge=modEdgeTarget;modEdgeRaf=null;return;}
+    modEdge+=diff*0.06;
+    modEdgeRaf=requestAnimationFrame(tick);
+  };
+  modEdgeRaf=requestAnimationFrame(tick);
+}
+
+function modulatorFlash(onDone){
+  setModTint(1);
+  setModEdge(1);
+  if(onDone)onDone();
+}
+function clearModTint(){setModTint(0);setModEdge(0);}
+/* ===== END MODULATOR SIGNAL ===== */
+
+/* ===== END CLUSTER VIEW ===== */
+
+/* ===== PHASES ===== */
+const stage=document.getElementById('stage');
+function setPhase(tag,title,desc,color,wash){
+  document.getElementById('ptitle').textContent=title;
+  document.getElementById('ptitle').style.color=color;
+  document.getElementById('pdesc').innerHTML=desc;
+  stage.style.setProperty('--bgwash',wash);
+}
+function frac(a){let mx=0;for(const v of a)mx=Math.max(mx,v);let k=0;for(const v of a)if(v>0.05*mx)k++;return k/a.length;}
+
+const bW=document.getElementById('bWander'),bC=document.getElementById('bCache'),bR=document.getElementById('bRecall');
+const bShowStored=document.getElementById('bShowStored');
+const MAX_CACHES=2;
+let showingStored=false;
+let storedPattern=null;
+function nearestCachePattern(){
+  if(!caches.length)return null;
+  let best=caches[0],nd=1e9;
+  for(const m of caches){
+    const d=Math.min(Math.abs(cacheLoc-m.loc),NS-Math.abs(cacheLoc-m.loc));
+    if(d<nd){nd=d;best=m;}
+  }
+  return best.pattern;
+}
+bShowStored.onclick=()=>{
+  if(!caches.length)return;
+  showingStored=!showingStored;
+  bShowStored.classList.toggle('active',showingStored);
+  if(showingStored){
+    drawClusterRaw(nearestCachePattern(),css('--barcode'));
+  }else{
+    if(lastPop)drawCluster(lastPop,lastColor||css('--place'));
+  }
+};
+
+/* ----- choose location by clicking / dragging the track ----- */
+const trackCv=document.getElementById('track');
+let dragging=false;
+function locFromEvent(e){
+  const rect=trackCv.getBoundingClientRect();
+  const clientX=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+  const pad=18, usable=rect.width-2*pad;
+  let frac=(clientX-rect.left-pad)/usable;
+  frac=Math.max(0,Math.min(1,frac));
+  return Math.round(frac*99);
+}
+function setLoc(e){
+  if(!canDrag()) return;
+  const target=locFromEvent(e);
+  // already in wandering (or mid-drag): ease the bump toward the cursor instead of snapping
+  if(wanderingNow || (lastPop && lastColor===css('--place'))){
+    if(animHandle){cancelAnimationFrame(animHandle);animHandle=null;
+      // drag interrupted the settle animation — restore the wandering control state
+      bW.disabled=false;bR.disabled=caches.length===0;
+      bC.disabled=caches.length>=MAX_CACHES;
+    }
+    wanderingNow=true;
+    cacheLoc=target;          // the committed location (used by cache/recall)
+    startGlide();             // smoothly move dispLoc -> cacheLoc, redrawing each frame
+  }else{
+    // fresh entry from a click (initial, or after cache/recall): animate the settle
+    cacheLoc=target;
+    dispLoc=target;           // no glide on first entry; the settle animation handles it
+    enterWandering(true);
+  }
+}
+// ---- eased "lag" of the displayed bump/bird toward the dragged location ----
+let dispLoc=cacheLoc;         // fractional position actually shown (eases toward cacheLoc)
+let glideHandle=null;
+function startGlide(){
+  if(glideHandle) return;     // already gliding; the loop will track the moving target
+  const tick=()=>{
+    const diff=cacheLoc-dispLoc;
+    if(Math.abs(diff)<0.3 && !dragging){   // arrived and released — snap and stop
+      dispLoc=cacheLoc;glideHandle=null;drawWanderAt(dispLoc);return;
+    }
+    dispLoc+=diff*0.30;       // ease ~30% of the remaining gap each frame (light lag)
+    drawWanderAt(dispLoc);
+    glideHandle=requestAnimationFrame(tick);
+  };
+  glideHandle=requestAnimationFrame(tick);
+}
+function drawWanderAt(loc){
+  const shown=Math.round(loc);
+  drawTrack(true,loc);
+  const act=runState(shown,0,false);
+  drawPop(act,css('--place'));
+  if(showingStored&&caches.length){
+    // refresh stored view to nearest cache as bird moves
+    drawClusterRaw(nearestCachePattern(),css('--barcode'));
+  }else{
+    drawCluster(act,css('--place'));
+  }
+  document.getElementById('readout').innerHTML=
+    `<div>location <b>${shown}</b></div><div>active <b>${Math.round(frac(act)*100)}%</b></div>`;
+}
+function stopGlide(){if(glideHandle){cancelAnimationFrame(glideHandle);glideHandle=null;}dispLoc=cacheLoc;}
+trackCv.style.cursor='pointer';
+trackCv.addEventListener('mousedown',e=>{if(!canDrag())return;dragging=true;setLoc(e);});
+window.addEventListener('mousemove',e=>{if(dragging)setLoc(e);});
+window.addEventListener('mouseup',()=>{dragging=false;});
+trackCv.addEventListener('touchstart',e=>{if(!canDrag())return;dragging=true;setLoc(e);e.preventDefault();},{passive:false});
+trackCv.addEventListener('touchmove',e=>{if(dragging){setLoc(e);e.preventDefault();}},{passive:false});
+trackCv.addEventListener('touchend',()=>{dragging=false;});
+
+
+function canDrag(){ return true; }   // track is always clickable; a click (re-)enters wandering
+
+function enterWandering(animate){
+  if(animHandle){cancelAnimationFrame(animHandle);animHandle=null;}
+  stopGlide();
+  wanderingNow=true;
+  document.getElementById('recallBanner').classList.remove('show');
+  clearModTint();
+  drawTrack(true);
+  const tip = caches.length>0
+    ? 'Press <b style="color:var(--good)">Recall</b> to bring it back.'
+    : 'Now <b>cache a seed</b> here.';
+  const setMsg=()=>setPhase('recurrence off','Wandering',
+    ('A smooth <b style="color:var(--place)">bump</b> tracks your location. '+tip),
+    css('--place'),'radial-gradient(600px circle at 50% 120%,var(--glow-place),transparent 70%)');
+  bW.classList.remove('armed');
+  const finish=(act)=>{
+    setMsg();
+    document.getElementById('readout').innerHTML=`<div>location <b>${cacheLoc}</b></div>`+
+      `<div>active <b>${Math.round(frac(act)*100)}%</b></div>`;
+    bW.disabled=false;
+    bR.disabled = caches.length===0;
+    if(caches.length<MAX_CACHES){bC.disabled=false;bC.classList.add('armed');
+      if(caches.length===0)bC.classList.add('pulse');}
+    else{bC.disabled=true;}
+  };
+  if(animate){
+    setMsg();
+    bC.disabled=true;bR.disabled=true;   // brief lock during the settle
+    drawPop(new Float64Array(N),css('--place'));   // start from blank so the rise is visible
+    drawCluster(new Float64Array(N),css('--place'));
+    animateState(cacheLoc,0,false,css('--place'),null,
+      act=>{document.getElementById('readout').innerHTML=`<div>location <b>${cacheLoc}</b></div>`+
+        `<div>active <b>${Math.round(frac(act)*100)}%</b></div>`;},
+      finish,
+      {stepsPerFrame:1,stopOnConverge:true,fixedScale:true,frameSkip:4});
+  }else{
+    const act=runState(cacheLoc,0,false);
+    drawPop(act,css('--place'));
+    drawCluster(act,css('--place'));
+    finish(act);
+  }
+}
+bW.onclick=()=>enterWandering(true);
+
+bC.onclick=()=>{
+  if(caches.length>=MAX_CACHES) return;  // cache limit reached
+  stopGlide();
+  wanderingNow=false;
+  document.getElementById('recallBanner').classList.remove('show');
+  drawTrack(true);drawPop(runState(cacheLoc,0,false),css('--place'));
+  setPhase('recurrence on','Caching','Watch recurrence pull the smooth bump into a sparse '+
+    '<b style="color:var(--barcode)">barcode</b>\u2026',
+    css('--barcode'),'radial-gradient(600px circle at 50% 120%,var(--glow-bar),transparent 70%)');
+  bC.disabled=true;bR.disabled=true;bW.disabled=true;
+  bC.classList.remove('pulse','armed');
+  // modulator flash first, then the barcode animation
+  modulatorFlash(()=>{
+    animateState(cacheLoc,1,true,css('--barcode'),null,
+      act=>{document.getElementById('readout').innerHTML=`<div>active <b>${Math.round(frac(act)*100)}%</b></div>`;},
+      act=>{
+      hebbUpdate(cacheLoc,act);
+      caches.push({loc:cacheLoc,pattern:act.slice()});
+      storedPattern=act.slice();
+      showingStored=false;bShowStored.classList.remove('active');
+      bShowStored.disabled=false;
+      calibrateSeedNorm();
+      drawTrack(true);
+      document.getElementById('readout').innerHTML=`<div>active <b>${Math.round(frac(act)*100)}%</b> (sparse)</div>`+
+        `<div>stored at <b>${cacheLoc}</b></div>`;
+      bW.disabled=false;bW.classList.add('armed');
+      bR.disabled=false;bR.classList.add('armed','pulse');
+      if(caches.length<MAX_CACHES){bC.disabled=false;}
+    });
+  });  // end modulatorFlash
+};
+
+bR.onclick=()=>{
+  wanderingNow=false;
+  if(caches.length===0) return;
+  stopGlide();
+  // best-matching stored barcode (for the faint overlay we converge toward)
+  let best=caches[0];
+  const banner=document.getElementById('recallBanner');
+  banner.classList.remove('show','miss');
+  drawTrack(true);
+  setPhase('recurrence on','Recall','Releasing the place cue \u2014 watch the network settle onto a stored '+
+    '<b style="color:var(--barcode)">barcode</b>\u2026',
+    css('--good'),'radial-gradient(600px circle at 50% 120%,rgba(47,158,99,.20),transparent 70%)');
+  document.getElementById('readout').innerHTML='';
+  bW.disabled=true;bC.disabled=true;bR.disabled=true;bR.classList.remove('pulse');
+  // modulator flash first, then pattern completion
+  modulatorFlash(()=>{
+    animateState(cacheLoc,1,false,css('--good'),best.pattern,null,
+      recalled=>{
+        let bestFid=-2;
+        for(const m of caches){const f=corr(m.pattern,recalled);if(f>bestFid){bestFid=f;best=m;}}
+        const conf=seedOutput(recalled)/seedNorm;
+        drawPop(recalled,css('--good'),best.pattern);
+        showingStored=false;bShowStored.classList.remove('active');
+        drawCluster(recalled,css('--good'));
+        const hit = conf>0.15 && bestFid>0.5;
+        bW.disabled=false;bW.classList.add('armed');
+        if(caches.length<MAX_CACHES)bC.disabled=false;
+        bR.disabled=false;
+        const rbIcon=document.getElementById('rbIcon');
+        const rbText=document.getElementById('rbText');
+        banner.classList.remove('show','miss');
+        void banner.offsetWidth;
+        if(hit){
+          rbIcon.textContent='✓';
+          rbText.innerHTML=`Recalled site <b>${best.loc}</b> <span class="rb-sub">${(conf*100|0)}% match</span>`;
+        }else{
+          banner.classList.add('miss');
+          rbIcon.textContent='✗';
+          rbText.innerHTML=`No memory here <span class="rb-sub">wander closer and recall again</span>`;
+        }
+        banner.classList.add('show');
+      });
+  });  // end modulatorFlash
+};
+
+document.getElementById('reset').onclick=()=>{
+  if(animHandle){cancelAnimationFrame(animHandle);animHandle=null;}
+  stopGlide();
+  reseed((Math.random()*1e9)|0);caches=[];lastPop=null;lastColor=null;lastOverlay=null;wanderingNow=false;
+  drawTrack(false);drawPop(null);drawCluster(null);
+  storedPattern=null;showingStored=false;
+  bShowStored.disabled=true;bShowStored.classList.remove('active');
+
+  setPhase('ready','Pick a spot on the track','Click anywhere on the track to place the bird and run the network.',
+    'var(--dim)','transparent');
+  document.getElementById('readout').innerHTML='';
+  document.getElementById('recallBanner').classList.remove('show','miss');
+  clearModTint();clCv.style.background='';
+  bW.disabled=false;bC.disabled=true;bR.disabled=true;
+  [bW,bC,bR].forEach(b=>b.classList.remove('armed','pulse'));
+};
+
+/* ===== INIT ===== */
+reseed(7);
+clResize();   // build cluster layout now that prefOrder is ready
+function initDraw(){drawTrack(false);drawPop(null);drawCluster(null);}
+requestAnimationFrame(()=>requestAnimationFrame(initDraw));
+window.addEventListener('load',()=>{clResize();initDraw();});
+window.addEventListener('resize',()=>{
+  clResize();
+  drawTrack(hasMemory);
+  drawPop(lastPop,lastColor||css('--place'),lastOverlay);
+  drawCluster(lastPop,lastColor||css('--place'));
+});
+</script>
+</body>
+</html>
