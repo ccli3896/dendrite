@@ -6,6 +6,8 @@ Interactive demo of [Ching Fang's repo here](https://github.com/chingf/barcodes)
 
 From paper, [*Barcode activity in a recurrent network model of the hippocampus enables efficient memory binding*](https://elifesciences.org/reviewed-preprints/103512) by Fang, Lindsey, Abbott, Aronov, & Chettih 2025.
 
+Also check out the [guided tour](https://ccli3896.github.io/dendrite/01-barcodes/tour.html).
+
 ## [02-rewardmag](https://ccli3896.github.io/dendrite/02-rewardmag/)
 When does reward magnitude matter in classic behavioral algorithms? 
 
