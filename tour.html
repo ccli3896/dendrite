@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wander · Cache · Recall — a tour</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&display=swap');
+  :root{
+    --bg:#f4f1ea;--card:#fbfaf6;--ink:#1f2933;--dim:#5a646f;--line:#e2ddd2;
+    --place:#1f9bb3;--barcode:#e85d2a;--seed:#c79a1e;--good:#2f9e63;
+    --glow-place:rgba(31,155,179,.18);--glow-bar:rgba(232,93,42,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Spline Sans Mono',monospace;
+    line-height:1.5;-webkit-font-smoothing:antialiased;height:100%;overflow:hidden;
+    overscroll-behavior:none;}
+  body{background-image:radial-gradient(900px circle at 20% -10%,#ece7da 0%,transparent 55%),
+    radial-gradient(700px circle at 100% 110%,#f0e6dd 0%,transparent 50%);}
+
+  .skip{position:fixed;top:16px;right:18px;z-index:50;font-size:11px;letter-spacing:.05em;
+    color:var(--dim);text-decoration:none;border:1px solid var(--line);padding:6px 11px;
+    border-radius:8px;background:rgba(251,250,246,.7);backdrop-filter:blur(4px);transition:.18s;}
+  .skip:hover{color:var(--ink);border-color:var(--dim);}
+
+  .track{position:fixed;inset:0;display:flex;height:100%;
+    transition:transform .62s cubic-bezier(.65,0,.35,1);will-change:transform;}
+  .slide{flex:0 0 100vw;height:100%;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;position:relative;padding:0 clamp(20px,6vw,60px);
+    user-select:none;-webkit-user-select:none;touch-action:none;}
+  .slide-inner{max-width:620px;width:100%;text-align:center;}
+
+  .kick{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--seed);
+    margin-bottom:10px;opacity:0;transform:translateY(6px);transition:opacity .5s ease .05s,transform .5s ease .05s;}
+  h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(30px,6.4vw,58px);line-height:1.04;
+    letter-spacing:-.02em;margin-bottom:14px;opacity:0;transform:translateY(10px);
+    transition:opacity .55s ease .12s,transform .55s ease .12s;}
+  .body-txt{color:var(--dim);font-size:clamp(13px,1.6vw,15px);max-width:440px;margin:0 auto;
+    opacity:0;transform:translateY(8px);transition:opacity .55s ease .2s,transform .55s ease .2s;}
+  .slide.active .kick,.slide.active h1,.slide.active .body-txt{opacity:1;transform:none;}
+
+  .stage-cv{margin:26px auto 6px;display:block;border-radius:14px;width:100%;max-width:520px;}
+  .visual-wrap{opacity:0;transform:translateY(10px) scale(.98);
+    transition:opacity .55s ease .28s,transform .55s ease .28s;}
+  .slide.active .visual-wrap{opacity:1;transform:none;}
+
+  .bird-wrap{opacity:0;transform:translateY(8px);margin:10px auto 0;
+    transition:opacity .5s ease .2s,transform .5s ease .2s,filter .6s ease;}
+  .slide.active .bird-wrap{opacity:1;transform:none;}
+  .bird-wrap.glow{filter:drop-shadow(0 0 12px rgba(47,158,99,.5));}
+  .bird-cv{width:100%;max-width:520px;height:clamp(58px,9vh,78px);display:block;margin:0 auto;cursor:grab;}
+  .bird-cv:active{cursor:grabbing;}
+
+  .hint{margin-top:22px;font-size:11.5px;letter-spacing:.08em;color:var(--dim);
+    opacity:0;transition:opacity .5s ease .5s;}
+  .slide.active .hint{opacity:.85;}
+  .hint b{color:var(--ink);}
+  @keyframes nudge{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
+  .hint .arrow{display:inline-block;animation:nudge 1.6s ease-in-out infinite;}
+
+  .legend-row{display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:11px;color:var(--dim);}
+  .legend-row span{display:inline-flex;align-items:center;gap:5px;}
+  .sw{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+  /* interactive status + recall banner */
+  .stage-status{margin-top:12px;font-size:12px;color:var(--dim);min-height:18px;letter-spacing:.01em;}
+  .stage-status b{color:var(--ink);font-weight:600;}
+  .recall-banner{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:6px 14px;
+    border-radius:20px;font-size:12.5px;font-weight:600;opacity:0;transform:translateY(4px);
+    transition:opacity .35s ease,transform .35s ease;
+    background:rgba(47,158,99,.1);color:var(--good);border:1px solid rgba(47,158,99,.4);}
+  .recall-banner b{font-weight:700;}
+  .recall-banner.show{opacity:1;transform:none;}
+  .recall-banner.miss{background:rgba(232,93,42,.09);color:var(--barcode);border-color:rgba(232,93,42,.4);}
+  .recall-banner.info{background:rgba(199,154,30,.1);color:var(--seed);border-color:rgba(199,154,30,.4);}
+
+  /* continue / clear controls on interactive slides */
+  .ctl-row{display:flex;gap:14px;justify-content:center;align-items:center;margin-top:16px;
+    opacity:0;transition:opacity .5s ease .35s;}
+  .slide.active .ctl-row{opacity:1;}
+  .continue-btn{appearance:none;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 18px;cursor:pointer;
+    transition:.18s;display:inline-flex;align-items:center;gap:7px;}
+  .continue-btn:hover{transform:translateY(-2px);border-color:var(--dim);}
+  .continue-btn .arrow{display:inline-block;animation:nudge 1.6s ease-in-out infinite;}
+  .clear-btn{background:none;border:none;font-family:inherit;font-size:11.5px;color:var(--dim);
+    cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+  .clear-btn:hover{color:var(--ink);}
+
+  /* outro recap */
+  .recap{display:flex;justify-content:center;gap:10px;margin:24px 0 6px;flex-wrap:wrap;}
+  .recap div{border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:12px 16px;font-size:12px;color:var(--dim);min-width:108px;}
+  .recap b{display:block;font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-bottom:2px;}
+  .recap .w b{color:var(--place);} .recap .c b{color:var(--barcode);} .recap .r b{color:var(--good);}
+  .links{display:flex;flex-direction:column;gap:10px;align-items:center;margin-top:24px;}
+  .links a{color:var(--ink);text-decoration:none;font-size:13px;font-weight:500;
+    border:1px solid var(--line);padding:11px 20px;border-radius:11px;background:#fff;
+    transition:.18s;display:inline-flex;align-items:center;gap:8px;}
+  .links a:hover{transform:translateY(-2px);border-color:var(--good);box-shadow:0 6px 18px -8px rgba(47,158,99,.25);}
+  .links a.secondary{background:none;color:var(--dim);border-color:transparent;}
+  .links a.secondary:hover{color:var(--ink);border-color:var(--line);box-shadow:none;transform:none;}
+
+  /* nav */
+  .nav{position:fixed;left:0;right:0;bottom:20px;display:flex;align-items:center;
+    justify-content:center;gap:16px;z-index:40;}
+  .dots{display:flex;gap:8px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);border:none;cursor:pointer;
+    padding:0;transition:.25s;}
+  .dot.active{background:var(--ink);width:20px;border-radius:4px;}
+  .navbtn{position:fixed;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(251,250,246,.85);backdrop-filter:blur(4px);
+    color:var(--ink);font-size:15px;cursor:pointer;z-index:40;transition:.18s;
+    display:flex;align-items:center;justify-content:center;}
+  .navbtn:hover{border-color:var(--dim);transform:translateY(-50%) scale(1.06);}
+  .navbtn:disabled{opacity:0;pointer-events:none;}
+  #prevBtn{left:16px;} #nextBtn{right:16px;}
+  @media(max-width:560px){.navbtn{width:32px;height:32px;font-size:13px;} #prevBtn{left:8px;} #nextBtn{right:8px;}
+    .nav{bottom:14px;}}
+</style>
+</head>
+<body>
+
+<a class="skip" href="index.html" onclick="event.stopPropagation()">full model →</a>
+
+<div class="track" id="track">
+
+  <!-- 0. INTRO -->
+  <section class="slide" data-idx="0">
+    <div class="slide-inner">
+      <div class="kick">A model of memory</div>
+      <h1>Wander, cache,<br>recall.</h1>
+      <p class="body-txt">Three steps a chickadee's brain takes to remember a hidden seed.</p>
+      <div class="bird-wrap"><canvas class="bird-cv" id="bird0"></canvas></div>
+      <div class="visual-wrap"><canvas class="stage-cv" id="cv0" width="600" height="90"></canvas></div>
+      <div class="hint">Click anywhere to begin <span class="arrow">→</span></div>
+    </div>
+  </section>
+
+  <!-- 1. WANDER -->
+  <section class="slide" data-idx="1">
+    <div class="slide-inner">
+      <div class="kick">Step 1</div>
+      <h1 style="color:var(--place)">Wander</h1>
+      <p class="body-txt">Moving through space, the brain draws a smooth wave of activity.</p>
+      <div class="bird-wrap"><canvas class="bird-cv" id="bird1"></canvas></div>
+      <div class="visual-wrap"><canvas class="stage-cv" id="cv1" width="600" height="150"></canvas></div>
+      <div class="legend-row"><span><i class="sw" style="background:var(--place)"></i>place code</span></div>
+      <div class="hint">Drag the bird along the track <span class="arrow">↔</span> — watch the code move with it</div>
+      <div class="ctl-row"><button class="continue-btn" data-next>Continue <span class="arrow">→</span></button></div>
+    </div>
+  </section>
+
+  <!-- 2. CACHE -->
+  <section class="slide" data-idx="2">
+    <div class="slide-inner">
+      <div class="kick">Step 2</div>
+      <h1 style="color:var(--barcode)">Cache</h1>
+      <p class="body-txt">Click a spot to bury a seed — the smooth wave locks into a sparse barcode.</p>
+      <div class="bird-wrap"><canvas class="bird-cv" id="bird2"></canvas></div>
+      <div class="visual-wrap"><canvas class="stage-cv" id="cv2" width="600" height="150"></canvas></div>
+      <div class="legend-row"><span><i class="sw" style="background:var(--barcode)"></i>barcode, stored</span></div>
+      <div class="stage-status" id="cacheStatus">Click the track to bury a seed</div>
+      <div class="ctl-row">
+        <button class="continue-btn" data-next>Continue <span class="arrow">→</span></button>
+        <button class="clear-btn" data-clear>↺ reset seeds</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. RECALL -->
+  <section class="slide" data-idx="3">
+    <div class="slide-inner">
+      <div class="kick">Step 3</div>
+      <h1 style="color:var(--good)">Recall</h1>
+      <p class="body-txt">Click near a flag — the place cue alone brings the stored barcode back.</p>
+      <div class="bird-wrap" id="birdWrap3"><canvas class="bird-cv" id="bird3"></canvas></div>
+      <div class="visual-wrap"><canvas class="stage-cv" id="cv3" width="600" height="150"></canvas></div>
+      <div class="legend-row">
+        <span><i class="sw" style="background:var(--barcode);opacity:.4"></i>stored</span>
+        <span><i class="sw" style="background:var(--good)"></i>recalled</span>
+      </div>
+      <div class="recall-banner" id="recallBanner">✓ match</div>
+      <div class="ctl-row">
+        <button class="continue-btn" data-next>Continue <span class="arrow">→</span></button>
+        <button class="clear-btn" data-clear>↺ reset seeds</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. OUTRO -->
+  <section class="slide" data-idx="4">
+    <div class="slide-inner">
+      <div class="kick">That's the loop</div>
+      <h1>Place becomes<br>memory.</h1>
+      <p class="body-txt">Wander, cache, recall — the same circuit, three states.</p>
+      <div class="bird-wrap"><canvas class="bird-cv" id="bird4"></canvas></div>
+      <div class="recap">
+        <div class="w"><b>Wander</b>smooth wave</div>
+        <div class="c"><b>Cache</b>sparse code</div>
+        <div class="r"><b>Recall</b>code returns</div>
+      </div>
+      <div class="links">
+        <a href="index.html">Play with the full model →</a>
+        <a class="secondary" href="https://ccli.substack.com" target="_blank">Read it on Dendrite</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button class="navbtn" id="prevBtn" aria-label="previous">‹</button>
+  <div class="dots" id="dots"></div>
+  <button class="navbtn" id="nextBtn" aria-label="next">›</button>
+</div>
+
+<script>
+/* ---------- tiny deterministic PRNG (same family as the full model) ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+function hexToRGB(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function lerpRGB(a,b,t){return[Math.round(a[0]+(b[0]-a[0])*t),Math.round(a[1]+(b[1]-a[1])*t),Math.round(a[2]+(b[2]-a[2])*t)];}
+function rgbStr(c,a){return `rgba(${c[0]},${c[1]},${c[2]},${a})`;}
+const easeInOutCubic=t=> t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+
+const N_BARS=48;
+function gaussianBump(center,sigma,n){
+  const v=new Float32Array(n);let mx=0;
+  for(let i=0;i<n;i++){const d=Math.min(Math.abs(i-center),n-Math.abs(i-center));
+    v[i]=Math.exp(-(d*d)/(2*sigma*sigma));if(v[i]>mx)mx=v[i];}
+  return v;
+}
+function sparsePattern(seed,n,count){
+  const rand=mulberry32(seed);const v=new Float32Array(n).fill(0);
+  for(let i=0;i<n;i++)v[i]=rand()*0.06;
+  const idxs=new Set();
+  while(idxs.size<count) idxs.add(Math.floor(rand()*n));
+  for(const i of idxs) v[i]=0.72+rand()*0.28;
+  return v;
+}
+/* ---------- interactive model state ---------- */
+let caches=[];                 // each stored memory: {loc (0..1), pattern}
+const MAX_CACHES=3;
+const HIT_DIST=0.11;           // how near (in track fraction) a recall must be to succeed
+const clamp01=v=>Math.max(0,Math.min(1,v));
+function barcodeFor(loc){ return sparsePattern(Math.round(loc*997)+11, N_BARS, 8); } // distinct per site
+function siteLabel(loc){ return Math.round(loc*99); }
+function cacheFlags(){ return caches.map(c=>c.loc); }
+
+/* ---------- generic bar-canvas renderer ---------- */
+function hi(cv){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=cv.clientWidth||600, h=parseInt(getComputedStyle(cv).height)||150;
+  cv.width=w*dpr;cv.height=h*dpr;
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+function drawBars(cv,values,colorHex,overlay,overlayAlpha){
+  const {ctx,w,h}=hi(cv);ctx.clearRect(0,0,w,h);
+  const pad=6,base=h-10,bw=(w-pad*2)/values.length;
+  const col=hexToRGB(colorHex);
+  if(overlay){
+    const ocol=hexToRGB(css('--barcode'));
+    for(let i=0;i<overlay.length;i++){
+      const v=overlay[i];if(v<=0.02)continue;const bh=v*(base-10);
+      ctx.fillStyle=rgbStr(ocol, (overlayAlpha||0.22));
+      ctx.fillRect(pad+i*bw,base-bh,Math.max(bw-1.5,0.8),bh);
+    }
+  }
+  for(let i=0;i<values.length;i++){
+    const v=Math.max(0,values[i]);const bh=v*(base-10);
+    ctx.fillStyle=rgbStr(col,0.5+0.5*v);
+    ctx.fillRect(pad+i*bw,base-bh,Math.max(bw-1.5,0.8),bh);
+  }
+  ctx.strokeStyle=css('--line');ctx.beginPath();ctx.moveTo(pad,base);ctx.lineTo(w-pad,base);ctx.stroke();
+}
+/* ---- black-capped chickadee, drawn in profile facing right, origin = body center ---- */
+function drawBird(ctx,x,y,s,facingRight,tilt,squash){
+  // small stylized chickadee-ish bird, height ~2*s (matches the demo bird)
+  ctx.save();ctx.translate(x,y);
+  if(!facingRight) ctx.scale(-1,1);
+  if(tilt) ctx.rotate(tilt);
+  if(squash && squash!==1) ctx.scale(1,squash);
+  // tail
+  ctx.fillStyle='#3a4650';
+  ctx.beginPath();ctx.moveTo(-s*0.7,-s*0.1);ctx.lineTo(-s*1.5,-s*0.5);ctx.lineTo(-s*1.4,s*0.25);ctx.closePath();ctx.fill();
+  // body
+  ctx.fillStyle='#54616c';
+  ctx.beginPath();ctx.ellipse(0,0,s*0.95,s*0.7,0,0,7);ctx.fill();
+  // belly
+  ctx.fillStyle='#e9e2d2';
+  ctx.beginPath();ctx.ellipse(s*0.15,s*0.18,s*0.6,s*0.45,0,0,7);ctx.fill();
+  // wing
+  ctx.fillStyle='#414d57';
+  ctx.beginPath();ctx.ellipse(-s*0.1,-s*0.02,s*0.5,s*0.32,-0.25,0,7);ctx.fill();
+  // head (black cap)
+  ctx.fillStyle='#2b3138';
+  ctx.beginPath();ctx.arc(s*0.7,-s*0.5,s*0.5,0,7);ctx.fill();
+  // cheek
+  ctx.fillStyle='#f3eee0';
+  ctx.beginPath();ctx.arc(s*0.78,-s*0.38,s*0.26,0,7);ctx.fill();
+  // eye
+  ctx.fillStyle='#1b1f24';
+  ctx.beginPath();ctx.arc(s*0.82,-s*0.55,s*0.09,0,7);ctx.fill();
+  // beak
+  ctx.fillStyle=css('--seed');
+  ctx.beginPath();ctx.moveTo(s*1.15,-s*0.5);ctx.lineTo(s*1.5,-s*0.4);ctx.lineTo(s*1.13,-s*0.28);ctx.closePath();ctx.fill();
+  // legs
+  ctx.strokeStyle='#7a6a4a';ctx.lineWidth=Math.max(s*0.12,1);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-s*0.05,s*0.65);ctx.lineTo(-s*0.05,s*1.05);
+  ctx.moveTo(s*0.3,s*0.65);ctx.lineTo(s*0.3,s*1.05);ctx.stroke();
+  ctx.restore();
+}
+
+/* a single sharp peck: quick jab down, slower recover (ph 0..1 → tilt fraction) */
+function peckCurve(ph){ ph=Math.max(0,Math.min(1,ph));
+  if(ph<0.30){const q=ph/0.30; return 1-(1-q)*(1-q);}   // snap down
+  const q=(ph-0.30)/0.70; return (1-q)*(1-q);            // ease back up
+}
+/* seed position/appearance over an animation, in bird-local units (origin = body center).
+   Motion is deliberately snappy (held, then quick plop / pop) rather than a smooth glide. */
+function seedState(stage,p){
+  p=Math.min(1,Math.max(0,p));
+  const beak={x:1.15,y:-0.4}, hole={x:0.98,y:0.98};
+  let x,y,a=1,mound=0;
+  if(stage==='hide'){
+    if(p<0.40){ x=beak.x; y=beak.y; a=1; mound=0; }                       // held in the beak while pecking
+    else if(p<0.60){ const q=(p-0.40)/0.20, qe=q*q;                        // quick plop into the hole (gravity)
+      x=beak.x+(hole.x-beak.x)*qe; y=beak.y+(hole.y-beak.y)*qe; a=1; mound=0; }
+    else if(p<0.80){ const q=(p-0.60)/0.20; x=hole.x; y=hole.y+q*0.12; a=1-q; mound=q; } // sink + cover
+    else { x=hole.x; y=hole.y; a=0; mound=1; }
+  }else{ // find
+    if(p<0.40){ x=hole.x; y=hole.y+0.12; a=0; mound=1; }                  // buried while the bird digs
+    else if(p<0.56){ const q=(p-0.40)/0.16, qe=1-(1-q)*(1-q);             // seed pops out fast
+      x=hole.x; y=(hole.y+0.12)-0.42*qe; a=Math.min(1,q*1.6); mound=1-q; }
+    else if(p<0.70){ const q=(p-0.56)/0.14; x=hole.x; y=(hole.y-0.30)+0.14*q; a=1; mound=0; } // little bounce
+    else { const q=(p-0.70)/0.30, qe=q*q;                                  // snatched up to the beak
+      x=hole.x+(beak.x-hole.x)*qe; y=(hole.y-0.16)+(beak.y-(hole.y-0.16))*qe; a=1; mound=0; }
+  }
+  return {x,y,a,mound};
+}
+function drawSeed(ctx,x,y,s,a){
+  if(a<=0.02)return;
+  ctx.save();ctx.globalAlpha=Math.min(1,a);
+  ctx.fillStyle=css('--seed');
+  ctx.beginPath();ctx.ellipse(x,y,s*0.15,s*0.10,-0.5,0,7);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.18)';
+  ctx.beginPath();ctx.ellipse(x-s*0.03,y+s*0.02,s*0.055,s*0.038,-0.5,0,7);ctx.fill();
+  ctx.restore();
+}
+
+/* small mascot — always stands on a ground line, never floats.
+   o.digAt (0..1): stand the bird so its peck-hole lands on that track spot (for burying/retrieving). */
+function renderBird(cv,o){
+  o=o||{};
+  const {ctx,w,h}=hi(cv);ctx.clearRect(0,0,w,h);
+  const m=8;
+  const s=Math.min((w-2*m)/3.4,(h-2*m)/2.3);
+  const halfW=1.55*s;
+  const gY=h-m-s*0.14;      // ground / feet line
+  const cyG=gY-1.02*s;      // ground-referenced body center (seed math uses this)
+  const cy=cyG-(o.lift||0)*s;  // actual body center — o.lift raises it for a hop
+  const tilt=o.tilt||0, squash=o.squash||1;
+
+  // position + facing
+  let facing,fs,cx;
+  if(o.digAt!=null){
+    // face (and stand) so the dig-hole lands exactly on the target track spot
+    fs = (o.faceRight!=null ? o.faceRight : (o.digAt>=0.5)) ? 1 : -1;
+    facing = fs>0;
+    const holeWorld=m+o.digAt*(w-2*m);
+    cx=Math.max(m+halfW,Math.min(w-m-halfW, holeWorld - fs*0.98*s));
+  }else{
+    facing=o.facing!==false; fs=facing?1:-1;
+    const rawx=m+(o.xFrac??0.5)*(w-2*m);
+    cx=Math.max(m+halfW,Math.min(w-m-halfW,rawx)); // keep whole bird on-canvas
+  }
+  const holeX=cx+fs*0.98*s;
+
+  if(o.track){
+    // track across the canvas
+    ctx.strokeStyle=css('--line');ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(m,gY);ctx.lineTo(w-m,gY);ctx.stroke();
+    ctx.fillStyle=css('--line');
+    for(let k=0;k<=10;k++){const x=m+(k/10)*(w-2*m);ctx.fillRect(x,gY-3,1,6);}
+    // buried-seed flags
+    if(o.flags) for(const fl of o.flags){
+      const fx=m+fl*(w-2*m);
+      ctx.strokeStyle=css('--barcode');ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(fx,gY);ctx.lineTo(fx,gY-13);ctx.stroke();
+      ctx.fillStyle=css('--barcode');
+      ctx.beginPath();ctx.moveTo(fx,gY-13);ctx.lineTo(fx+8,gY-10.5);ctx.lineTo(fx,gY-8);ctx.closePath();ctx.fill();
+    }
+  }else if(!o.seed){
+    // soft contact shadow so it reads as standing
+    ctx.fillStyle='rgba(60,52,38,.12)';
+    ctx.beginPath();ctx.ellipse(cx+fs*0.16*s,gY+s*0.05,s*0.72,s*0.11,0,0,7);ctx.fill();
+  }
+
+  // empty probe hole — a recall miss: dug, nothing there
+  if(o.probe){
+    ctx.fillStyle='rgba(60,52,38,.2)';
+    ctx.beginPath();ctx.ellipse(holeX,gY,s*0.19,s*0.065,0,0,7);ctx.fill();
+  }
+
+  if(o.seed){
+    const st=seedState(o.seed.stage,o.seed.p);
+    if(!o.track){   // draw a short ground line only when there's no full track
+      ctx.strokeStyle='rgba(120,110,80,.28)';ctx.lineWidth=Math.max(s*0.03,1);
+      ctx.beginPath();ctx.moveTo(cx-1.5*s,gY);ctx.lineTo(cx+2.0*s,gY);ctx.stroke();
+    }
+    ctx.fillStyle='rgba(60,52,38,.22)';
+    ctx.beginPath();ctx.ellipse(holeX,gY,s*0.2,s*0.07,0,0,7);ctx.fill();
+    if(st.mound>0.02){
+      const mr=s*(0.14+0.2*st.mound);
+      ctx.fillStyle='#b6a684';
+      ctx.beginPath();ctx.ellipse(holeX,gY,mr,mr*0.62,0,Math.PI,2*Math.PI);ctx.fill();
+    }
+    if(st.y>0.9) drawSeed(ctx,holeX,cyG+st.y*s,s,st.a);   // buried: behind the bird
+    drawBird(ctx,cx,cy,s,facing,tilt,squash);
+    if(st.y<=0.9) drawSeed(ctx,cx+fs*st.x*s,cyG+st.y*s,s,st.a);  // above ground: in front
+  }else{
+    drawBird(ctx,cx,cy,s,facing,tilt,squash);
+  }
+}
+
+/* ---------- per-slide animation controllers ---------- */
+let raf0=null,raf1=null,raf2=null,raf3=null,raf4=null;
+function stopAll(){[raf0,raf1,raf2,raf3,raf4].forEach(r=>r&&cancelAnimationFrame(r));raf0=raf1=raf2=raf3=raf4=null;}
+
+function playIntro(){
+  const cv=document.getElementById('cv0'), bcv=document.getElementById('bird0');
+  const t0=performance.now();
+  const tick=(t)=>{
+    const el=(t-t0)/1000;
+    const center=(N_BARS-1)/2 + Math.sin(el*0.8)*((N_BARS-1)/2-3);
+    drawBars(cv,gaussianBump(center,4.2,N_BARS),css('--place'));
+    // bird walks along the ground with the bump — grounded, never airborne
+    renderBird(bcv,{xFrac:center/(N_BARS-1),facing:Math.cos(el*0.8)>=0,tilt:Math.sin(el*8)*0.02});
+    raf0=requestAnimationFrame(tick);
+  };
+  raf0=requestAnimationFrame(tick);
+}
+/* generic pointer control for the interactive slides: press/drag on the stage
+   canvases sets a location; a callback runs on move (preview) and release (commit). */
+function attachStage(slideIdx,cvId,birdId,onMove,onCommit,busyFn){
+  const slide=slides[slideIdx];
+  const cv=document.getElementById(cvId), bird=document.getElementById(birdId);
+  let down=false;
+  const locFromX=(clientX)=>{const r=cv.getBoundingClientRect();return clamp01((clientX-r.left)/r.width);};
+  slide.addEventListener('pointerdown',e=>{
+    if(idx!==slideIdx) return;
+    if(e.target!==cv && e.target!==bird) return;   // ignore buttons / text
+    if(busyFn&&busyFn()) return;
+    down=true; onMove(locFromX(e.clientX)); e.preventDefault();
+  });
+  window.addEventListener('pointermove',e=>{
+    if(!down||idx!==slideIdx) return;
+    if(busyFn&&busyFn()){down=false;return;}
+    onMove(locFromX(e.clientX));
+  });
+  window.addEventListener('pointerup',e=>{
+    if(!down||idx!==slideIdx) return; down=false;
+    if(busyFn&&busyFn()) return;
+    onCommit(locFromX(e.clientX));
+  });
+}
+
+/* ---- Wander: drag the bird, place code follows (exploration only) ---- */
+let wanderLoc=0.5, wanderPrev=0.5, wanderSetup=false;
+function wanderRedraw(){
+  drawBars(document.getElementById('cv1'),gaussianBump(wanderLoc*(N_BARS-1),4.5,N_BARS),css('--place'));
+  renderBird(document.getElementById('bird1'),{xFrac:wanderLoc,facing:wanderLoc>=wanderPrev,track:true});
+}
+function playWander(){
+  if(!wanderSetup){wanderSetup=true;
+    attachStage(1,'cv1','bird1',
+      loc=>{wanderPrev=wanderLoc;wanderLoc=loc;wanderRedraw();}, ()=>{});
+  }
+  wanderPrev=wanderLoc; wanderRedraw();
+}
+
+/* ---- Cache: click a spot to bury a seed there (stores a barcode for that site) ---- */
+let cacheSel=0.5, cachePrev=0.5, cacheBusy=false, cacheSetup=false, cacheJustStored=false;
+function cacheStatus(){
+  const el=document.getElementById('cacheStatus');
+  if(caches.length===0) el.innerHTML='Click the track to bury a seed';
+  else if(caches.length>=MAX_CACHES) el.innerHTML=`<b>${caches.length}</b> seeds cached — nest is full`;
+  else el.innerHTML=`<b>${caches.length}</b> seed${caches.length>1?'s':''} cached · click to add another`;
+}
+function cacheDraw(){
+  const cv=document.getElementById('cv2'), bcv=document.getElementById('bird2');
+  if(cacheJustStored && caches.length) drawBars(cv,caches[caches.length-1].pattern,css('--barcode'));
+  else drawBars(cv,gaussianBump(cacheSel*(N_BARS-1),4.5,N_BARS),css('--place'));
+  renderBird(bcv,{xFrac:cacheSel,facing:cacheSel>=cachePrev,track:true,flags:cacheFlags()});
+  cacheStatus();
+}
+function commitCache(loc){
+  if(cacheBusy||caches.length>=MAX_CACHES){cacheSel=loc;cacheDraw();return;}
+  cacheBusy=true; cacheJustStored=false;
+  const cv=document.getElementById('cv2'), bcv=document.getElementById('bird2');
+  const from=gaussianBump(loc*(N_BARS-1),4.5,N_BARS), pat=barcodeFor(loc);
+  const c0=hexToRGB(css('--place')), c1=hexToRGB(css('--barcode'));
+  const flags=cacheFlags(), dur=1150, t0=performance.now();
+  const tick=(t)=>{
+    let p=Math.min(1,(t-t0)/dur), e=easeInOutCubic(p);
+    const vals=new Float32Array(N_BARS); for(let i=0;i<N_BARS;i++) vals[i]=from[i]+(pat[i]-from[i])*e;
+    const col=lerpRGB(c0,c1,e);
+    drawBars(cv,vals,`#${col.map(v=>v.toString(16).padStart(2,'0')).join('')}`);
+    // snappy digging: two quick pecks, a beat while the seed drops, then a tamp peck
+    let tilt;
+    if(p<0.40) tilt=0.55*peckCurve(((p/0.40)*2)%1);
+    else if(p<0.60) tilt=0.06;
+    else if(p<0.82) tilt=0.55*peckCurve((p-0.60)/0.22);
+    else tilt=0;
+    renderBird(bcv,{digAt:loc,track:true,flags,squash:1-0.12*Math.min(1,tilt/0.55),
+      tilt,seed:{stage:'hide',p}});
+    if(p<1) raf2=requestAnimationFrame(tick);
+    else { caches.push({loc,pattern:pat}); cacheBusy=false; cacheJustStored=true;
+      cacheSel=loc; cachePrev=loc; cacheDraw(); }
+  };
+  raf2=requestAnimationFrame(tick);
+}
+function playCache(){
+  if(!cacheSetup){cacheSetup=true;
+    attachStage(2,'cv2','bird2',
+      loc=>{cachePrev=cacheSel;cacheSel=loc;cacheJustStored=false;cacheDraw();},
+      loc=>{commitCache(loc);}, ()=>cacheBusy);
+  }
+  cacheBusy=false; cachePrev=cacheSel; cacheDraw();
+}
+
+/* ---- Recall: click a spot; if near a buried seed the barcode is reconstructed ---- */
+let recallSel=0.5, recallPrev=0.5, recallBusy=false, recallSetup=false;
+function recallBanner(kind,info){
+  const b=document.getElementById('recallBanner');
+  b.classList.remove('show','miss','info'); void b.offsetWidth;
+  if(kind==='hit') b.innerHTML=`✓ Recalled site <b>${info.site}</b> · ${Math.round(info.conf*100)}% match`;
+  else if(kind==='miss'){b.classList.add('miss');b.innerHTML='✗ No memory here — try closer to a flag';}
+  else if(kind==='none'){b.classList.add('info');b.innerHTML='Bury a seed on Step 2 first';}
+  b.classList.add('show');
+}
+function recallDraw(){
+  drawBars(document.getElementById('cv3'),gaussianBump(recallSel*(N_BARS-1),4.5,N_BARS),css('--place'));
+  renderBird(document.getElementById('bird3'),{xFrac:recallSel,facing:recallSel>=recallPrev,track:true,flags:cacheFlags()});
+}
+function commitRecall(loc){
+  if(recallBusy) return;
+  recallSel=loc;
+  if(caches.length===0){ recallDraw(); recallBanner('none'); return; }
+  recallBusy=true;
+  const cv=document.getElementById('cv3'), bcv=document.getElementById('bird3');
+  const birdWrap=document.getElementById('birdWrap3'); birdWrap.classList.remove('glow');
+  document.getElementById('recallBanner').classList.remove('show');
+  let nearest=caches[0], nd=1e9;
+  for(const c of caches){const d=Math.abs(c.loc-loc); if(d<nd){nd=d;nearest=c;}}
+  const hit=nd<HIT_DIST, conf=clamp01(1-nd/HIT_DIST);
+  const from=gaussianBump(loc*(N_BARS-1),4.5,N_BARS), flags=cacheFlags();
+  const faceR=nearest.loc>=loc;              // face the way it travels
+  const dur=hit?1550:1050, t0=performance.now();
+  const tick=(t)=>{
+    let p=Math.min(1,(t-t0)/dur), e=easeInOutCubic(p);
+    const vals=new Float32Array(N_BARS);
+    if(hit){
+      // place cue completes to the stored barcode; the bird HOPS to the flag then digs it up
+      for(let i=0;i<N_BARS;i++) vals[i]=from[i]+(nearest.pattern[i]-from[i])*e;
+      drawBars(cv,vals,css('--good'),nearest.pattern,0.22);
+      if(p<0.40){
+        const gp=p/0.40, hf=(gp*2)%1, lift=Math.sin(Math.PI*hf)*0.22;   // two little hops
+        renderBird(bcv,{digAt:loc+(nearest.loc-loc)*gp,faceRight:faceR,track:true,flags,lift,tilt:0.05});
+      }else{
+        const fp=(p-0.40)/0.60;
+        const tilt = fp<0.55 ? 0.55*peckCurve(((fp/0.55)*2)%1)   // two quick digging pecks
+                             : -0.20*Math.min(1,(fp-0.55)/0.35); // head snaps up with the seed
+        renderBird(bcv,{digAt:nearest.loc,faceRight:faceR,track:true,flags,tilt,seed:{stage:'find',p:fp}});
+      }
+    }else{
+      // no memory nearby: place cue fades, the bird pecks the spot and finds nothing
+      for(let i=0;i<N_BARS;i++) vals[i]=from[i]*(1-e);
+      drawBars(cv,vals,css('--place'));
+      const mp=Math.min(1,p/0.75);
+      renderBird(bcv,{digAt:loc,track:true,flags,tilt:0.5*peckCurve((mp*2)%1),probe:p>0.22});
+    }
+    if(p<1) raf3=requestAnimationFrame(tick);
+    else { recallBusy=false; if(hit) birdWrap.classList.add('glow');
+      recallBanner(hit?'hit':'miss',{site:siteLabel(nearest.loc),conf}); }
+  };
+  raf3=requestAnimationFrame(tick);
+}
+function playRecall(){
+  if(!recallSetup){recallSetup=true;
+    attachStage(3,'cv3','bird3',
+      loc=>{recallPrev=recallSel;recallSel=loc;document.getElementById('recallBanner').classList.remove('show');recallDraw();},
+      loc=>{commitRecall(loc);}, ()=>recallBusy);
+  }
+  recallBusy=false; recallPrev=recallSel;
+  document.getElementById('recallBanner').classList.remove('show');
+  document.getElementById('birdWrap3').classList.remove('glow');
+  recallDraw();
+}
+function clearCaches(){
+  caches=[]; cacheJustStored=false;
+  if(idx===2) cacheDraw();
+  if(idx===3){ document.getElementById('recallBanner').classList.remove('show');
+    document.getElementById('birdWrap3').classList.remove('glow'); recallDraw(); }
+}
+function playOutro(){
+  const bcv=document.getElementById('bird4');
+  const t0=performance.now();
+  const tick=(t)=>{
+    const el=(t-t0)/1000;
+    renderBird(bcv,{xFrac:0.5,tilt:Math.sin(el*1.0)*0.045});
+    raf4=requestAnimationFrame(tick);
+  };
+  raf4=requestAnimationFrame(tick);
+}
+
+/* ---------- slide deck controller ---------- */
+const slides=[...document.querySelectorAll('.slide')];
+const trackEl=document.getElementById('track');
+const dotsEl=document.getElementById('dots');
+const prevBtn=document.getElementById('prevBtn'), nextBtn=document.getElementById('nextBtn');
+let idx=0;
+slides.forEach((s,i)=>{
+  const d=document.createElement('button');
+  d.className='dot'+(i===0?' active':'');
+  d.addEventListener('click',e=>{e.stopPropagation();goTo(i);});
+  dotsEl.appendChild(d);
+});
+const dots=[...dotsEl.children];
+
+function goTo(i){
+  i=Math.max(0,Math.min(slides.length-1,i));
+  idx=i;
+  trackEl.style.transform=`translateX(-${i*100}vw)`;
+  slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+  dots.forEach((d,k)=>d.classList.toggle('active',k===i));
+  prevBtn.disabled=(i===0);
+  nextBtn.disabled=(i===slides.length-1);
+  stopAll();
+  if(i===0) playIntro();
+  else if(i===1) playWander();
+  else if(i===2) playCache();
+  else if(i===3) playRecall();
+  else if(i===4) playOutro();
+}
+function next(){ if(idx<slides.length-1) goTo(idx+1); }
+function prev(){ if(idx>0) goTo(idx-1); }
+
+// only the non-interactive slides advance on a bare click; 1–3 use their own controls
+slides.forEach((s,i)=>{ if(i>=1&&i<=3)return; s.addEventListener('click',()=>next()); });
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();next();}));
+document.querySelectorAll('[data-clear]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();clearCaches();}));
+prevBtn.addEventListener('click',e=>{e.stopPropagation();prev();});
+nextBtn.addEventListener('click',e=>{e.stopPropagation();next();});
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'){prev();}
+});
+let touchX=null;
+window.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;},{passive:true});
+window.addEventListener('touchend',e=>{
+  if(touchX==null)return;
+  if(idx>=1&&idx<=3){touchX=null;return;}   // interactive slides: horizontal drag controls the bird, not the deck
+  const dx=e.changedTouches[0].clientX-touchX;
+  if(Math.abs(dx)>50){ dx<0?next():prev(); }
+  touchX=null;
+},{passive:true});
+window.addEventListener('resize',()=>{ goTo(idx); });
+
+goTo(0);
+</script>
+</body>
+</html>
