@@ -100,13 +100,6 @@
   .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:10px;position:relative;}
   .legend span{display:inline-flex;align-items:center;gap:6px;}
   .swatch{width:10px;height:10px;border-radius:2px;}
-  .hint-caption{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5;opacity:.9;}
-  .hint-caption b{font-weight:600;}
-  @media(max-width:560px){
-    .btns .b-sub{display:none;}
-    button.act{font-size:13px;padding:12px 10px;}
-    .legend{gap:12px;}
-  }
 </style>
 </head>
 <body>
@@ -115,16 +108,16 @@
   <h1>Wander · Cache · Recall</h1>
   <p class="lede">When chickadees stash their seeds, the same part of their brain that tells them
     <b>where they are</b> forms a <i>barcode</i> that's linked to the storage site, so they can later
-    <span style="color:var(--good)">recall it</span> from the place cue alone. Click through the three steps below to run the network yourself.</p>
+    <span style="color:var(--good)">recall it</span> from the place cue alone.</p>
 
   <div class="stage" id="stage">
     <div class="btns" style="margin-bottom:10px;">
       <button class="act" id="bWander">Wandering
-        <span class="b-sub">just moving · place code</span></button>
+        <span class="b-sub">recurrence off · place code</span></button>
       <button class="act" id="bCache" disabled>Cache a seed
-        <span class="b-sub">feedback on · store barcode</span></button>
+        <span class="b-sub">recurrence on · store barcode</span></button>
       <button class="act" id="bRecall" disabled>Recall
-        <span class="b-sub">feedback on · place cue only</span></button>
+        <span class="b-sub">recurrence on · no seed</span></button>
       <button class="reset" id="reset" style="align-self:center;margin:0 0 0 4px;">reset</button>
     </div>
 
@@ -139,7 +132,6 @@
       <canvas id="pop"></canvas>
     </div>
     <div class="axis poplabel"><span>← 800 RNN neurons, sorted by preferred location →</span></div>
-    <p class="hint-caption">Each bar is one neuron's activity. A smooth hump means a <b style="color:var(--place)">place code</b>; a jagged, sparse pattern is a <b style="color:var(--barcode)">barcode</b>.</p>
     <div class="legend">
       <span><i class="swatch" style="background:var(--place)"></i> place code</span>
       <span><i class="swatch" style="background:var(--barcode)"></i> barcode</span>
@@ -148,12 +140,11 @@
     <div class="readout" id="readout"></div>
     <div class="recall-banner" id="recallBanner"><span class="rb-icon" id="rbIcon">✓</span><span id="rbText"></span></div>
     <div class="cluster-row">
-      <span class="cluster-label">The network, as a web of neurons</span>
+      <span class="cluster-label">Toy hippocampus model</span>
       <span class="recurrence-status" id="recurrenceStatus"></span>
       <button class="show-stored" id="bShowStored" disabled>show stored</button>
     </div>
     <canvas id="cluster" class="cluster-cv"></canvas>
-    <p class="hint-caption">The same 800 neurons drawn as a network — brighter dots are more active. Once you've cached, <b>show stored</b> replays the barcode held in memory.</p>
   </div>
 
   <p class="foot">Live model from <a href="https://github.com/chingf/barcodes" target="_blank" style="color:var(--seed);text-decoration:underline;text-underline-offset:2px;"><code>chingf/barcodes</code></a> (Fang et al., 2025, <i>eLife</i>): divisive-normalized
@@ -471,7 +462,7 @@ let modTint=0, modTintTarget=0, modTintRaf=null;
 function setModTint(target){
   modTintTarget=target;
   const lbl=document.getElementById('recurrenceStatus');
-  if(lbl){lbl.textContent='feedback on ↑';lbl.classList.toggle('visible',target>0);}
+  if(lbl){lbl.textContent='recurrence ↑';lbl.classList.toggle('visible',target>0);}
   if(modTintRaf)return;
   const tick=()=>{
     const diff=modTintTarget-modTint;
@@ -626,7 +617,7 @@ function enterWandering(animate){
   const tip = caches.length>0
     ? 'Press <b style="color:var(--good)">Recall</b> to bring it back.'
     : 'Now <b>cache a seed</b> here.';
-  const setMsg=()=>setPhase('step 1 · feedback off','Wandering',
+  const setMsg=()=>setPhase('recurrence off','Wandering',
     ('A smooth <b style="color:var(--place)">bump</b> tracks your location. '+tip),
     css('--place'),'radial-gradient(600px circle at 50% 120%,var(--glow-place),transparent 70%)');
   bW.classList.remove('armed');
@@ -665,7 +656,7 @@ bC.onclick=()=>{
   wanderingNow=false;
   document.getElementById('recallBanner').classList.remove('show');
   drawTrack(true);drawPop(runState(cacheLoc,0,false),css('--place'));
-  setPhase('step 2 · feedback on','Caching','Watch feedback pull the smooth bump into a sparse '+
+  setPhase('recurrence on','Caching','Watch recurrence pull the smooth bump into a sparse '+
     '<b style="color:var(--barcode)">barcode</b>\u2026',
     css('--barcode'),'radial-gradient(600px circle at 50% 120%,var(--glow-bar),transparent 70%)');
   bC.disabled=true;bR.disabled=true;bW.disabled=true;
@@ -700,7 +691,7 @@ bR.onclick=()=>{
   const banner=document.getElementById('recallBanner');
   banner.classList.remove('show','miss');
   drawTrack(true);
-  setPhase('step 3 \u00b7 feedback on','Recall','Releasing the place cue \u2014 watch the network settle onto a stored '+
+  setPhase('recurrence on','Recall','Releasing the place cue \u2014 watch the network settle onto a stored '+
     '<b style="color:var(--barcode)">barcode</b>\u2026',
     css('--good'),'radial-gradient(600px circle at 50% 120%,rgba(47,158,99,.20),transparent 70%)');
   document.getElementById('readout').innerHTML='';
