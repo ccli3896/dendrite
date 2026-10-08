@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+
+<!--
+  ================================================================
+  EDIT THE LIST HERE
+  ----------------------------------------------------------------
+  One speaker per line, parts separated by a vertical bar |
+      Time | Name | Lab | Talk title | Email | Tags
+  Time is optional (leave it off everywhere to hide the column).
+  Write TBD as the talk title if it isn't known yet.
+
+  Tags are optional. Write either or both words at the end:
+      students   = taking master's students this year
+      chat       = open to chat
+  e.g.  15:05 | Arron Hall | Akrami | ... | arron.hall@ucl.ac.uk | students, chat
+
+  A break:   14:50 | Break      (or just: Break)
+
+  Pasting rows from Excel or Google Sheets (tab-separated) also
+  works, including a leading order-number column.
+
+  Lines starting with # are ignored. Order here = order on the page.
+  Change the Title and Subtitle lines however you like
+  (leave Subtitle blank to hide it).
+  ================================================================
+-->
+<script type="text/plain" id="speakers">
+Title: Master's Research Symposium
+Subtitle: Speakers and talks
+
+14:20 | Chenguang Li | Erlich Lab | How do networks generate behavior? | chenguang.li@ucl.ac.uk | students, chat
+14:25 | Daniel Yang | Erlich/Harris Labs | Wireless random-access optogenetics and recording | fukui.yang.23@ucl.ac.uk | chat
+14:30 | Michael Bukwich | Burgess Lab | Mechanistic basis of cognition in mice using 2D-VR | m.bukwich@ucl.ac.uk | students, chat
+14:35 | Tom Jahans-Price | Burgess Lab | Working out where to go next: Neural circuits for goals | t.jahans-price@ucl.ac.uk | students, chat
+14:40 | Cristina Mazuski | O'Keefe Lab | Neural Dynamics of Social Learning and Memory | c.mazuski@ucl.ac.uk | students, chat
+14:45 | Adrian Roggenbach | Mrsic-Flogel/Behrens Labs | TBD | a.roggenbach@ucl.ac.uk | students, chat
+14:50 | Break
+15:00 | Julia Harris | Harris Lab | Neurophysiological mechanisms of sleep | j.j.harris@ucl.ac.uk | students, chat
+15:05 | Arron Hall | Akrami Lab | Statistical learning: Extracting structure from our environment | arron.hall@ucl.ac.uk | students, chat
+15:10 | Albert Albesa-González | Behrens Lab | How do our memories depend on previous memories? | albert.gonzalez@ucl.ac.uk | students, chat
+15:15 | Francesca Pozzolo | Behrens Lab | Building maps for memory and planning | francesca.pozzolo.23@ucl.ac.uk | chat
+15:20 | Huiliang Li | Li Lab | TBD | huiliang.li@ucl.ac.uk | students, chat
+15:25 | Mariya Hristova | Hristova Lab | TBD | m.hristova@ucl.ac.uk | students, chat
+15:30 | Enny Van Beest | CortexLab | TBD | e.beest@ucl.ac.uk | students, chat
+</script>
+<!-- ======================= END OF LIST ======================= -->
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;500;600&display=swap">
+<title>Master's Research Symposium</title>
+<style>
+:root {
+  --bg: #ffffff; --surface: #f3f5f7; --ink: #17212b; --muted: #5c6a77;
+  --rule: #e1e5e9; --accent: #1d5c86;
+  --t-students-bg: #e2f1e8; --t-students-ink: #1c5a37;
+  --t-chat-bg: #e6eef7; --t-chat-ink: #1d4c72;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12171c; --surface: #1a2128; --ink: #e6ebef; --muted: #97a4b0;
+    --rule: #29323b; --accent: #80b7dd;
+    --t-students-bg: #183326; --t-students-ink: #9fd9b5;
+    --t-chat-bg: #1a2b3b; --t-chat-ink: #a6cbeb;
+    color-scheme: dark;
+  }
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { background: var(--bg); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Public Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: clamp(32px, 7vw, 80px) clamp(18px, 4vw, 40px) 72px; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px 32px; flex-wrap: wrap; margin-bottom: 36px; }
+.heading { flex: 1 1 420px; min-width: 0; }
+h1 {
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 400;
+  font-size: clamp(2.2rem, 5.2vw, 3.6rem); line-height: 1.04; letter-spacing: -0.015em;
+  margin: 0 0 0.3em; max-width: 18ch;
+}
+.sub { margin: 0; font-size: 1.1rem; }
+.count { margin: 0.6em 0 0; font-size: 0.9rem; color: var(--muted); }
+.search {
+  font: inherit; font-size: 0.95rem; padding: 9px 12px; width: min(300px, 100%);
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); color: var(--ink);
+}
+.search::placeholder { color: var(--muted); opacity: 0.8; }
+.search:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.table-box { overflow-x: auto; }
+.list { width: 100%; border-collapse: collapse; }
+.list col.c-time { width: 4.5rem; }
+.list col.c-name { width: 19%; } .list col.c-lab { width: 19%; }
+.list col.c-talk { width: 36%; } .list col.c-email { width: 22%; }
+.list td.time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.93rem; white-space: nowrap; }
+.list.no-time .time, .list.no-time col.c-time { display: none; }
+.list tr.break td {
+  padding: 12px 20px 12px 0; background: var(--surface); color: var(--muted);
+  font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.list tr.break td:first-child { padding-left: 0; }
+.list tbody tr.break:hover td { background: var(--surface); }
+.list thead th {
+  text-align: left; font-weight: 600; font-size: 0.85rem; color: var(--muted);
+  padding: 0 20px 10px 0; border-bottom: 1.5px solid var(--ink);
+}
+.list tbody td { padding: 18px 20px 18px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+.list tbody tr:hover td { background: var(--surface); }
+.list td.name { font-weight: 600; }
+.list td.lab { color: var(--muted); }
+.list td.talk { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-size: 1.18rem; line-height: 1.32; }
+.list td.talk.tbd { color: var(--muted); font-style: italic; font-size: 1.05rem; }
+.list td.email { font-size: 0.93rem; overflow-wrap: anywhere; }
+.list td.email a { color: var(--accent); text-decoration: none; }
+.list td.email a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.empty { color: var(--muted); padding: 28px 0; margin: 0; border-top: 1.5px solid var(--ink); }
+.tools { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+.filters-label { font-size: 0.85rem; color: var(--muted); margin-right: 2px; }
+.filter {
+  font: inherit; font-size: 0.85rem; padding: 5px 11px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--rule); background: var(--bg); color: var(--ink);
+}
+.filter:hover { border-color: var(--muted); }
+.filter[aria-pressed="true"].f-students { background: var(--t-students-bg); color: var(--t-students-ink); border-color: var(--t-students-ink); }
+.filter[aria-pressed="true"].f-chat { background: var(--t-chat-bg); color: var(--t-chat-ink); border-color: var(--t-chat-ink); }
+.filter[aria-pressed="true"]::before { content: "\2713\00a0"; }
+.filter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.tag {
+  display: inline-block; font-size: 0.76rem; font-weight: 500; line-height: 1.3;
+  padding: 3px 9px; border-radius: 999px;
+}
+.tag.students { background: var(--t-students-bg); color: var(--t-students-ink); }
+.tag.chat { background: var(--t-chat-bg); color: var(--t-chat-ink); }
+@media (max-width: 760px) {
+  .list colgroup { display: none; }
+  .list thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .list, .list tbody, .list tr, .list td { display: block; width: 100%; }
+  .list tbody { border-top: 1.5px solid var(--ink); }
+  .list tbody tr { padding: 16px 0; border-bottom: 1px solid var(--rule); }
+  .list tbody td { border: 0; padding: 0; }
+  .list tbody tr:hover td { background: none; }
+  .list td.name { font-size: 1.05rem; }
+  .list td.time { font-size: 0.85rem; margin-bottom: 2px; }
+  .list tr.break { padding: 10px 12px; background: var(--surface); }
+  .list tr.break td { padding: 0; }
+  .list td.lab { font-size: 0.92rem; margin-bottom: 6px; }
+  .list td.talk { margin-bottom: 6px; }
+  .search { width: 100%; }
+  .tools { width: 100%; align-items: stretch; }
+  .filters { justify-content: flex-start; }
+  .tags { margin-top: 5px; margin-bottom: 4px; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div class="heading">
+      <h1 id="title"></h1>
+      <p class="sub" id="subtitle"></p>
+      <p class="count" id="count"></p>
+    </div>
+    <div class="tools">
+      <input type="search" class="search" id="search" placeholder="Search names, labs, talks" aria-label="Search speakers">
+      <div class="filters" id="filters" role="group" aria-label="Show only">
+        <span class="filters-label">Show only:</span>
+        <button type="button" class="filter f-students" data-tag="students" aria-pressed="false">Taking master's students</button>
+        <button type="button" class="filter f-chat" data-tag="chat" aria-pressed="false">Open to chat</button>
+      </div>
+    </div>
+  </header>
+  <div class="table-box">
+    <table class="list" id="table">
+      <colgroup><col class="c-time"><col class="c-name"><col class="c-lab"><col class="c-talk"><col class="c-email"></colgroup>
+      <thead><tr><th scope="col" class="time">Time</th><th scope="col">Name</th><th scope="col">Lab</th><th scope="col">Talk title</th><th scope="col">Email</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="empty" role="status" hidden></p>
+  </div>
+</main>
+<script>
+(function () {
+  "use strict";
+  var raw = document.getElementById("speakers").textContent;
+  var title = "Master's Research Symposium", subtitle = "", items = [];
+  var TIME = /^\d{1,2}[:.]\d{2}$/;
+
+  raw.split(/\r?\n/).forEach(function (line) {
+    var t = line.trim();
+    if (!t || t.charAt(0) === "#") return;
+    var m = t.match(/^(title|subtitle)\s*:(.*)$/i);
+    if (m) {
+      if (m[1].toLowerCase() === "title") title = m[2].trim() || title;
+      else subtitle = m[2].trim();
+      return;
+    }
+    var parts = (line.indexOf("\t") !== -1 ? line.split("\t") : line.split("|"))
+      .map(function (s) { return s.trim().replace(/^"([\s\S]*)"$/, "$1").trim(); });
+    // drop a leading order number (e.g. pasted "1  14:20  Name ...")
+    if (/^\d+$/.test(parts[0]) && parts.length > 1) parts.shift();
+    var time = "";
+    if (TIME.test(parts[0])) time = parts.shift().replace(".", ":");
+    while (parts.length && parts[parts.length - 1] === "" && parts.length > 5) parts.pop();
+    var nonEmpty = parts.filter(function (p) { return p; });
+    if (nonEmpty.length === 0 && !time) return;
+    if (nonEmpty.length <= 1 && /^(break|lunch|coffee)/i.test(nonEmpty[0] || "")) {
+      items.push({ isBreak: true, time: time, label: nonEmpty[0] });
+      return;
+    }
+    if (!nonEmpty.length) return;
+    var r = { time: time, name: parts[0] || "", lab: parts[1] || "", talk: parts[2] || "", email: parts[3] || "", students: false, chat: false };
+    if (/^name$/i.test(r.name) && /^lab/i.test(r.lab)) return;
+    var words = parts.slice(4).join(" ").toLowerCase();
+    r.students = /student|taking/.test(words);
+    r.chat = /chat/.test(words);
+    items.push(r);
+  });
+
+  var rows = items.filter(function (i) { return !i.isBreak; });
+  var hasTimes = items.some(function (i) { return i.time; });
+
+  document.title = title;
+  document.getElementById("title").textContent = title;
+  var sub = document.getElementById("subtitle");
+  sub.textContent = subtitle; sub.hidden = !subtitle;
+  document.getElementById("count").textContent = rows.length === 1 ? "1 speaker" : rows.length + " speakers";
+
+  var tbody = document.getElementById("rows"), table = document.getElementById("table");
+  var empty = document.getElementById("empty"), search = document.getElementById("search");
+  if (!hasTimes) table.classList.add("no-time");
+  var filtersEl = document.getElementById("filters");
+  var active = { students: false, chat: false };
+  if (!rows.length) { search.hidden = true; filtersEl.hidden = true; }
+  else if (!rows.some(function (r) { return r.students || r.chat; })) filtersEl.hidden = true;
+  Array.prototype.forEach.call(filtersEl.querySelectorAll(".filter"), function (b) {
+    b.addEventListener("click", function () {
+      var t = b.getAttribute("data-tag");
+      active[t] = !active[t];
+      b.setAttribute("aria-pressed", String(active[t]));
+      render();
+    });
+  });
+
+  function td(cls, content) {
+    var c = document.createElement("td"); c.className = cls;
+    if (typeof content === "string") c.textContent = content; else if (content) c.append(content);
+    return c;
+  }
+  function pill(cls, text) {
+    var s = document.createElement("span"); s.className = "tag " + cls; s.textContent = text; return s;
+  }
+  function nameCell(r) {
+    var c = td("name", r.name);
+    if (r.students || r.chat) {
+      var wrap = document.createElement("div"); wrap.className = "tags";
+      if (r.students) wrap.append(pill("students", "Taking master's students"));
+      if (r.chat) wrap.append(pill("chat", "Open to chat"));
+      c.append(wrap);
+    }
+    return c;
+  }
+  function matches(r, q) {
+    if (active.students && !r.students) return false;
+    if (active.chat && !r.chat) return false;
+    return !q || [r.name, r.lab, r.talk, r.email].some(function (v) { return v.toLowerCase().indexOf(q) !== -1; });
+  }
+  function render() {
+    var q = search.value.trim().toLowerCase();
+    var narrowing = !!q || active.students || active.chat;
+    tbody.replaceChildren();
+    var shown = 0;
+    items.forEach(function (it) {
+      var tr = document.createElement("tr");
+      if (it.isBreak) {
+        if (narrowing) return;
+        tr.className = "break";
+        var label = td("", it.label);
+        label.colSpan = 4;
+        tr.append(td("time", it.time), label);
+        tbody.append(tr);
+        return;
+      }
+      if (!matches(it, q)) return;
+      shown++;
+      var mail = null;
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(it.email)) {
+        mail = document.createElement("a"); mail.href = "mailto:" + it.email; mail.textContent = it.email;
+      }
+      var talk = td("talk", it.talk);
+      if (/^(tbd|tba|tbc)\.?$/i.test(it.talk)) { talk.textContent = "Title to be announced"; talk.className = "talk tbd"; }
+      tr.append(td("time", it.time), nameCell(it), td("lab", it.lab), talk, td("email", mail || it.email));
+      tbody.append(tr);
+    });
+    table.hidden = shown === 0;
+    empty.hidden = shown > 0;
+    if (!rows.length) empty.textContent = "Speakers will be listed here soon.";
+    else if (q) empty.textContent = "No speakers match \u201C" + search.value.trim() + "\u201D with the selected filters.";
+    else empty.textContent = "No speakers match the selected filters.";
+  }
+  search.addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>
