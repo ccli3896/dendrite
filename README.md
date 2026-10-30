@@ -13,5 +13,7 @@ When does reward magnitude matter in classic behavioral algorithms?
 
 From paper, [*Reward magnitude determines reinforcement learning efficiency*](https://www-science-org.libproxy.ucl.ac.uk/doi/10.1126/science.aeb0813) by Gong, Martell, Dudman, & Coddington 2026.
 
-## [03-2026-MSc-symposium](https://ccli3896.github.io/dendrite/03-2026-MSc-symposium/)
-Quick reference site for UCL MSc students, blitz symposium 2026.
+## [04-hebbian-steering](https://ccli3896.github.io/dendrite/04-hebbian-steering/)
+Live, in-browser simulations of reward-seeking behavior emerging from local Hebbian-like plasticity: reward seeking, learning through neuron turnover, continual learning (Hebbian vs. three-factor RPE rule), and open-field search. Built as talk animations.
+
+From paper, *Reward-seeking behavior emerges from Hebbian-like plasticity* by Li, Brenner, Ye, Du Pont, Kudarauskas, Chen, & Erlich 2026. The open-field demo uses the model from [*Neuron-level prediction and noise can implement flexible reward-seeking behavior*](https://pmc.ncbi.nlm.nih.gov/articles/PMC11142161/) by Li, Brenner, Boesky, Ramanathan, & Kreiman 2024.

@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Live simulations: reward-seeking behavior emerging from local Hebbian-like plasticity.">
+<title>Hebbian steering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a portrait stage (about 3:4) centred on any screen; everything stacks in one column. Big title, one picture + one plot, almost no text.
+   Colour: rose = reward / rewarded arm a, teal = arm b; green / amber only for added / removed neurons. */
+:root {
+  --frame: #efeeea; --bg: #fcfcfa; --well: #f0f0ed; --line: #dcdfe3;
+  --ink: #191c21; --muted: #5f6670; --faint: #b9bfc7; --hair: #e7e9ec;
+  --a: #cf3f75; --b: #0f9488; --add: #3f9a2a; --del: #c47f12;
+  --land0: #f2f2ef; --land1: #c3d0dc;
+  --font: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;   /* always light, whatever the viewer's theme */
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--frame); color: var(--ink); font-family: var(--font); margin: 0; display: flex; justify-content: center; height: 100%;
+  -webkit-font-smoothing: antialiased; }
+.stage { width: min(100%, max(75vh, 660px)); height: 100%; display: flex; flex-direction: column; background: var(--bg); container-type: inline-size;
+  padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); padding-block: 16px 14px; }
+
+/* top bar: brand left, segmented tab control right */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--hair); }
+.brand { font-size: 14px; font-weight: 600; letter-spacing: .01em; color: var(--ink); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.brand i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+nav.seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--well); border-radius: 10px; }
+nav.seg a { font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 7px; white-space: nowrap; display: flex; align-items: baseline; gap: 6px; }
+nav.seg a .n { font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+nav.seg a:hover { color: var(--ink); }
+nav.seg a[aria-current="page"] { color: var(--ink); background: var(--bg); box-shadow: 0 1px 2px rgba(20, 24, 31, .08), 0 0 0 1px rgba(20, 24, 31, .05); }
+nav.seg a[aria-current="page"] .n { color: var(--a); }
+a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--a); outline-offset: 2px; }
+
+.head { padding-top: 22px; }
+.eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 4px 0 0; font-size: 34px; font-weight: 600; letter-spacing: -.02em; line-height: 1.1; }
+
+main { flex: 1; display: flex; min-height: 0; padding-top: 18px; }
+.tab { flex: 1; display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, .85fr) minmax(0, 1fr); min-height: 0; }
+.tab.one { gap: 18px; grid-template-rows: 1fr 1fr; }
+.tab[hidden] { display: none !important; }
+.tab.cover { display: flex; align-items: center; justify-content: center; text-align: center; }
+.cover-in { width: 100%; margin-bottom: 10vh; }
+.cover h2 { margin: 0; font-size: clamp(44px, 7vh, 72px); font-weight: 600; letter-spacing: -.03em; line-height: 1.04; text-wrap: balance; }
+.cover .rule { display: flex; justify-content: center; gap: 6px; margin: 26px 0 22px; }
+.cover .rule i { width: 28px; height: 4px; border-radius: 2px; }
+.cover p { margin: 0 auto; max-width: 22em; font-size: clamp(19px, 2.6vh, 26px); color: var(--muted); line-height: 1.4; text-wrap: balance; }
+body.on-cover .head, body.on-cover footer, body.on-cover .brand { visibility: hidden; }
+.cv { position: relative; min-width: 0; min-height: 160px; }
+canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* toolbar: one control height, grouped, small uppercase labels */
+footer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-top: 14px; margin-top: 12px; border-top: 1px solid var(--hair); font-size: 13px; color: var(--muted); }
+.grp { display: flex; align-items: center; gap: 8px; }
+.lab { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+button, select, input[type=number] { font: inherit; font-size: 13px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; height: 32px; padding: 0 12px; cursor: pointer; }
+button:hover, select:hover, input[type=number]:hover { border-color: var(--faint); }
+button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); min-width: 76px; font-weight: 600; }
+button.primary:hover { background: #2a2f37; }
+select { appearance: none; -webkit-appearance: none; padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23606874' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; }
+.joined { display: inline-flex; }
+.joined > * { border-radius: 0; margin-left: -1px; }
+.joined > :first-child { border-radius: 8px 0 0 8px; margin-left: 0; }
+.joined > :last-child { border-radius: 0 8px 8px 0; }
+.joined > :only-child { border-radius: 8px; }
+input[type=number] { width: 76px; cursor: text; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button { opacity: .5; }
+button.star { width: 34px; padding: 0; font-size: 16px; color: var(--faint); }
+button.star[aria-pressed="true"] { color: var(--a); }
+input[type=range] { accent-color: var(--ink); width: 104px; }
+#speedv { min-width: 30px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.clock { font-variant-numeric: tabular-nums; margin-left: auto; color: var(--muted); }
+.opt[hidden] { display: none !important; }
+@container (max-width: 740px) { .brand { display: none; } .topbar { justify-content: center; } }
+@container (max-width: 520px) { nav.seg a { padding: 6px 8px; } nav.seg a .n { display: none; } }
+</style>
+</head>
+<body>
+<div class="stage">
+<header>
+  <div class="topbar">
+    <span class="brand"><i style="background:var(--a)"></i><i style="background:var(--b);margin-left:-4px"></i>Hebbian steering</span>
+    <nav class="seg" aria-label="Animations">
+      <a href="#intro" data-tab="intro">Title</a>
+      <a href="#reward" data-tab="reward"><span class="n">1</span>Reward</a>
+      <a href="#churn" data-tab="churn"><span class="n">2</span>Turnover</a>
+      <a href="#continual" data-tab="continual"><span class="n">3</span>Continual</a>
+      <a href="#openfield" data-tab="openfield"><span class="n">4</span>Open field</a>
+    </nav>
+  </div>
+  <div class="head"><div class="eyebrow" id="eyebrow">Demo 1 of 4</div><h1 id="title">Reward seeking</h1></div>
+</header>
+
+<main>
+  <section class="tab cover" id="tab-intro" data-title="" hidden>
+    <div class="cover-in">
+      <h2>Hebbian steering</h2>
+      <div class="rule"><i style="background:var(--a)"></i><i style="background:var(--b)"></i></div>
+      <p>Reward-seeking behavior emerges from local dynamics</p>
+    </div>
+  </section>
+  <section class="tab" id="tab-reward" data-title="Reward seeking"
+    data-info="PC rule · 1–50–2 network · α 0.0164, β 0.0072, η 0.01 · choosing a returns s = 1 to the input neuron, b returns 0 · curve: mean of 16 networks">
+    <div class="cv"><canvas id="r-net"></canvas></div>
+    <div class="cv"><canvas id="r-pc"></canvas></div>
+  </section>
+  <section class="tab" id="tab-churn" data-title="Neuron turnover" hidden
+    data-info="Same task and PC parameters. From step 20k, random hidden neurons are removed or new random ones added in batches · curves: mean of 12 networks each">
+    <div class="cv"><canvas id="c-net"></canvas></div>
+    <div class="cv"><canvas id="c-pc"></canvas></div>
+  </section>
+  <section class="tab one" id="tab-continual" data-title="Continual learning" hidden
+    data-info="2–2 network. Context A: reward on input A for choosing a. Context B: reward on input B for choosing b. Lines: π_A = w(A→a) − w(A→b) and π_B = w(B→b) − w(B→a), median of 32 seeds, 10k-step running mean. Hebbian (PC rule) α 0.0373 β 0.0072; RPE α 0.439 β 1; η 0.01">
+    <div class="cv"><canvas id="l-ch0"></canvas></div>
+    <div class="cv"><canvas id="l-ch1"></canvas></div>
+  </section>
+  <section class="tab" id="tab-openfield" data-title="Open field" hidden style="grid-template-rows:minmax(0,1fr)"
+    data-info="PaN model (Li et al. 2024) · tiny 1–4 network (no hidden layer) · α 0.01 · ω 0.1 · η_x 0.03 · η_W 1e-3 · 10 settling steps · round hills · input = change in height · rose trail = within 300 cells of a peak">
+    <div class="cv"><canvas id="o-map"></canvas></div>
+  </section>
+</main>
+
+<footer>
+  <div class="grp"><button class="primary" id="play" title="Space">Pause</button><button id="reset" title="R">New seed</button></div>
+  <div class="grp"><label class="lab" for="seed">Seed</label><span class="joined"><input type="number" id="seed" min="1" max="99999" step="1" value="1"><button id="fav" class="star" aria-pressed="false" title="Favorite this seed (F)">☆</button></span><select id="favs" aria-label="Favorite seeds" hidden></select></div>
+  <div class="grp" title="← / →"><label class="lab" for="speed">Speed</label><input type="range" id="speed" min="-3" max="4" step="1" value="0"><span id="speedv">1×</span></div>
+  <div class="grp opt" data-for="churn"><label class="lab" for="churnN">Remove/add</label><select id="churnN"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option></select><span>every</span><select id="churnK"><option value="2500">2.5k</option><option value="5000" selected>5k</option><option value="10000">10k</option></select></div>
+  <div class="grp opt" data-for="continual"><label class="lab" for="blockL">Block</label><select id="blockL"><option value="50000">50k (paper)</option><option value="100000" selected>100k</option></select></div>
+  <div class="grp opt" data-for="openfield"><label class="lab" for="land">Field</label><select id="land"><option value="3">Three peaks</option><option value="sw">Moving peak</option></select></div>
+  <span class="clock" id="clock" title="">step 0</span>
+</footer>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Simulation cores, ported from ssb/ (PC rule) and ccli3896/PaN (open field).
+// Plain JS, no deps. Used by the HTML page and by node validation tests.
+// ---------------------------------------------------------------------------
+
+// ---- RNG: mulberry32 + Box-Muller ----------------------------------------
+function RNG(seed) {
+  let a = (seed >>> 0) || 1;
+  let spare = null;
+  const u = () => {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const n = () => {
+    if (spare !== null) { const s = spare; spare = null; return s; }
+    let x, y, r;
+    do { x = 2 * u() - 1; y = 2 * u() - 1; r = x * x + y * y; } while (r >= 1 || r === 0);
+    const f = Math.sqrt(-2 * Math.log(r) / r);
+    spare = y * f; return x * f;
+  };
+  return { u, n };
+}
+
+const clip = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+
+// argmax with uniform random tie-breaking (ssb.envs._common)
+function argmaxTie(arr, rng) {
+  let best = -Infinity, idx = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] > best) { best = arr[i]; idx = [i]; }
+    else if (arr[i] === best) idx.push(i);
+  }
+  return idx.length === 1 ? idx[0] : idx[Math.floor(rng.u() * idx.length)];
+}
+
+// ---------------------------------------------------------------------------
+// PC network (ssb/models/ssb.py + rules.update_weights), feedforward layers.
+// sizes: e.g. [1, 50, 2]. W[l] is Float64Array (n_pre*n_post), index i*n_post+k
+// (presynaptic i -> postsynaptic k), matching ssb's weights[pre, post].
+// One timestep = env step, 1 activity settle step, noise+relu, weight update.
+// ---------------------------------------------------------------------------
+class PCNet {
+  constructor(sizes, hp, seed) {
+    this.hp = Object.assign({ alpha: 0.0164, beta: 0.0072, eta: 0.01, initScale: 1 }, hp);
+    this.rng = RNG(seed);
+    this.sizes = sizes.slice();
+    const r = this.rng, s = this.hp.initScale;
+    this.x = sizes.map(n => Float64Array.from({ length: n }, () => r.u() * s));
+    this.W = [];
+    for (let l = 0; l < sizes.length - 1; l++)
+      this.W.push(Float64Array.from({ length: sizes[l] * sizes[l + 1] }, () => r.u() * s));
+    this.pred = sizes.map(n => new Float64Array(n));
+  }
+  // pred[l+1][k] = sum_i x[l][i] W[l][i,k]
+  _pred() {
+    const L = this.sizes.length;
+    for (let l = 0; l < L - 1; l++) {
+      const np_ = this.sizes[l], nq = this.sizes[l + 1], W = this.W[l], x = this.x[l], p = this.pred[l + 1];
+      p.fill(0);
+      for (let i = 0; i < np_; i++) { const xi = x[i]; if (xi === 0) continue; const o = i * nq; for (let k = 0; k < nq; k++) p[k] += xi * W[o + k]; }
+    }
+  }
+  // stim: Float64Array for input layer
+  step(stim) {
+    const { alpha, beta, eta } = this.hp, L = this.sizes.length, r = this.rng;
+    // (1) activity settle: x -= alpha * clip(2(x - (s + pred)), -10, 10)
+    this._pred();
+    for (let l = 0; l < L; l++) {
+      const x = this.x[l], p = this.pred[l];
+      for (let i = 0; i < x.length; i++) {
+        const target = (l === 0 ? stim[i] : p[i]);
+        x[i] -= alpha * clip(2 * (x[i] - target), -10, 10);
+      }
+    }
+    // (2) noise + relu
+    for (let l = 0; l < L; l++) { const x = this.x[l]; for (let i = 0; i < x.length; i++) { const v = x[i] + eta * r.n(); x[i] = v > 0 ? v : 0; } }
+    if (this.hp.rule === 'RPE') {
+      // HR / RPE rule (rules.update_weights_hrpe): W += beta*clip(x_i x_k * delta), delta = mean_input(s - x)
+      let d = 0; const x0 = this.x[0]; for (let i = 0; i < x0.length; i++) d += stim[i] - x0[i]; d /= x0.length;
+      for (let l = 0; l < L - 1; l++) {
+        const np_ = this.sizes[l], nq = this.sizes[l + 1], W = this.W[l], x = this.x[l], xq = this.x[l + 1];
+        for (let i = 0; i < np_; i++) { const o = i * nq; for (let k = 0; k < nq; k++) { const v = W[o + k] + beta * clip(x[i] * xq[k] * d, -10, 10); W[o + k] = v > 0 ? v : 0; } }
+      }
+      return;
+    }
+    // (3) PC weight update: W_ik += beta*clip(x_i * (x_k - pred_k), +-10), then relu
+    this._pred();
+    for (let l = 0; l < L - 1; l++) {
+      const np_ = this.sizes[l], nq = this.sizes[l + 1], W = this.W[l], x = this.x[l], xq = this.x[l + 1], p = this.pred[l + 1];
+      for (let i = 0; i < np_; i++) {
+        const xi = x[i], o = i * nq;
+        for (let k = 0; k < nq; k++) { const v = W[o + k] + beta * clip(xi * (xq[k] - p[k]), -10, 10); W[o + k] = v > 0 ? v : 0; }
+      }
+    }
+  }
+  out() { return this.x[this.x.length - 1]; }
+  // --- structural plasticity on hidden layer h (1..L-2) ---
+  removeHidden(h, idx) {           // idx: sorted array of neuron indices to remove
+    const keep = []; const del = new Set(idx);
+    for (let i = 0; i < this.sizes[h]; i++) if (!del.has(i)) keep.push(i);
+    const nIn = this.sizes[h - 1], nOut = this.sizes[h + 1], nk = keep.length;
+    const Win = new Float64Array(nIn * nk), Wout = new Float64Array(nk * nOut);
+    for (let i = 0; i < nIn; i++) keep.forEach((j, jj) => { Win[i * nk + jj] = this.W[h - 1][i * this.sizes[h] + j]; });
+    keep.forEach((j, jj) => { for (let k = 0; k < nOut; k++) Wout[jj * nOut + k] = this.W[h][j * nOut + k]; });
+    this.W[h - 1] = Win; this.W[h] = Wout;
+    this.x[h] = Float64Array.from(keep.map(j => this.x[h][j]));
+    this.sizes[h] = nk; this.pred[h] = new Float64Array(nk);
+  }
+  addHidden(h, n, scale) {          // new neurons get random weights in [0, scale)
+    const r = this.rng, old = this.sizes[h], nn = old + n, nIn = this.sizes[h - 1], nOut = this.sizes[h + 1];
+    const Win = new Float64Array(nIn * nn), Wout = new Float64Array(nn * nOut);
+    for (let i = 0; i < nIn; i++) for (let j = 0; j < nn; j++) Win[i * nn + j] = j < old ? this.W[h - 1][i * old + j] : r.u() * scale;
+    for (let j = 0; j < nn; j++) for (let k = 0; k < nOut; k++) Wout[j * nOut + k] = j < old ? this.W[h][j * nOut + k] : r.u() * scale;
+    this.W[h - 1] = Win; this.W[h] = Wout;
+    const x = new Float64Array(nn); x.set(this.x[h]); this.x[h] = x;
+    this.sizes[h] = nn; this.pred[h] = new Float64Array(nn);
+  }
+}
+
+// Deterministic 2AFC (bandit_det): rewards[action]
+function detStep(net, rewards, stimBuf) {
+  const a = argmaxTie(net.out(), net.rng);
+  const s = rewards[a];
+  stimBuf.fill(0); stimBuf[0] = s;
+  net.step(stimBuf);
+  return { a, s };
+}
+
+// Continual-learning env (ssb/envs/continual.py, separate_inputs=True):
+// context c in {0,1}: arm c rewarded, and the reward arrives on input neuron c.
+function clStep(net, ctx, stimBuf) {
+  const a = argmaxTie(net.out(), net.rng);
+  const s = a === ctx ? 1 : 0;
+  stimBuf.fill(0); stimBuf[ctx] = s;
+  net.step(stimBuf);
+  return { a, s };
+}
+
+// ---------------------------------------------------------------------------
+// PaN open field (ccli3896/PaN Scripts/Fig6I_3PeaksRange.py), sizes [1,30,4].
+// E = (x0 - relu(s))^2 + sum_l (x_{l+1} - relu(W_l x_l))^2
+// settle 10 x (grad step on acts + act noise), then grad step on W + W noise, clip +-2.
+// ---------------------------------------------------------------------------
+class PaNAgent {
+  constructor(seed, hp) {
+    this.hp = Object.assign({ alpha: 0.01, omega: 0.01, etaA: 0.01, etaW: 0.0001, settle: 10, sizes: [1, 30, 4] }, hp);
+    const r = this.rng = RNG(seed);
+    const S = this.sizes = this.hp.sizes;
+    this.x = S.map(n => new Float64Array(n));
+    this.W = []; // W[l] shape (n_{l+1}, n_l), index k*n_l + i
+    for (let l = 0; l < S.length - 1; l++) { const sc = Math.sqrt(2 / S[l]); this.W.push(Float64Array.from({ length: S[l] * S[l + 1] }, () => sc * r.n())); }
+    this.u = S.map(n => new Float64Array(n));   // pre-activations of layer l (from l-1)
+    this.e = S.map(n => new Float64Array(n));   // errors
+    this.g = S.map(n => new Float64Array(n));
+  }
+  _errors(s) {
+    const S = this.sizes, L = S.length;
+    const t0 = s > 0 ? s : 0;
+    for (let i = 0; i < S[0]; i++) this.e[0][i] = this.x[0][i] - t0;
+    for (let l = 0; l < L - 1; l++) {
+      const n = S[l], m = S[l + 1], W = this.W[l], x = this.x[l], u = this.u[l + 1], e = this.e[l + 1], xq = this.x[l + 1];
+      for (let k = 0; k < m; k++) { let a = 0; const o = k * n; for (let i = 0; i < n; i++) a += W[o + i] * x[i]; u[k] = a; e[k] = xq[k] - (a > 0 ? a : 0); }
+    }
+  }
+  settle(s) {
+    const S = this.sizes, L = S.length, { alpha, etaA } = this.hp, r = this.rng;
+    this._errors(s);
+    for (let l = 0; l < L; l++) {
+      const g = this.g[l]; for (let i = 0; i < S[l]; i++) g[i] = 2 * this.e[l][i];
+      if (l < L - 1 && !(l === 0 && this.hp.stopInputGrad)) {
+        const n = S[l], m = S[l + 1], W = this.W[l], u = this.u[l + 1], e = this.e[l + 1];
+        for (let k = 0; k < m; k++) { if (u[k] <= 0) continue; const c = -2 * e[k], o = k * n; for (let i = 0; i < n; i++) g[i] += c * W[o + i]; }
+      }
+    }
+    for (let l = 0; l < L; l++) { const x = this.x[l], g = this.g[l]; for (let i = 0; i < S[l]; i++) x[i] -= alpha * clip(g[i], -10, 10); }
+    for (let l = 0; l < L; l++) { const x = this.x[l]; for (let i = 0; i < S[l]; i++) x[i] += etaA * r.n(); }
+  }
+  learn(s) {
+    const S = this.sizes, L = S.length, { omega, etaW } = this.hp, r = this.rng;
+    this._errors(s);
+    for (let l = 0; l < L - 1; l++) {
+      const n = S[l], m = S[l + 1], W = this.W[l], x = this.x[l], u = this.u[l + 1], e = this.e[l + 1];
+      for (let k = 0; k < m; k++) {
+        const c = u[k] > 0 ? -2 * e[k] : 0, o = k * n;
+        for (let i = 0; i < n; i++) { let v = W[o + i] - omega * clip(c * x[i], -10, 10) + etaW * r.n(); W[o + i] = v > 2 ? 2 : v < -2 ? -2 : v; }
+      }
+    }
+  }
+  out() { return this.x[this.x.length - 1]; }
+}
+
+// Landscapes (torus). Locations are (i, j) = (row, col).
+// Fig 6a-e: 3 pyramids on a 4000 x 4000 torus (Fig6I_3PeaksRange.py)
+function pyramid(i, j, v) { return Math.min(i * v / 1000, (2000 - i) * v / 1000, j * v / 1000, (2000 - j) * v / 1000); }
+const LAND3 = {
+  M: 4000,
+  f: (i, j) => Math.max(pyramid(i, j, 500), pyramid(4000 - i, j, 750), pyramid(i, 4000 - j, 1000), 0),
+  peaks: [{ i: 1000, j: 1000, h: 500 }, { i: 3000, j: 1000, h: 750 }, { i: 1000, j: 3000, h: 1000 }],
+};
+// Fig 6f-h: one 750 peak on a 5000 x 5000 torus, switching location every 50k steps (Fig6II_SwitchingPeaks.py)
+function pyrM(m, v, pi, pj) { return (i, j) => Math.min(i * v / pi, (m - i) * v / (m - pi), j * v / pj, (m - j) * v / (m - pj)); }
+const LANDSW = [
+  { M: 5000, f: pyrM(5000, 750, 1000, 1000), peaks: [{ i: 1000, j: 1000, h: 750 }] },
+  { M: 5000, f: pyrM(5000, 750, 4000, 4000), peaks: [{ i: 4000, j: 4000, h: 750 }] },
+];
+// Round cones (used in the talk page): same peak positions and heights as LAND3, radius 1000.
+function torusDist(i, j, p, M) { const di = Math.min(Math.abs(i - p.i), M - Math.abs(i - p.i)), dj = Math.min(Math.abs(j - p.j), M - Math.abs(j - p.j)); return Math.sqrt(di * di + dj * dj); }
+function coneLand(M, peaks, R) { return { M, peaks, R, f: (i, j) => { let h = 0; for (const p of peaks) { const v = p.h * (1 - torusDist(i, j, p, M) / R); if (v > h) h = v; } return h; } }; }
+const CONES3 = coneLand(4000, LAND3.peaks, 1000);
+// Switching peak: one cone that covers the whole torus (radius = farthest torus distance, 2500*sqrt(2)),
+// so every location has a slope and therefore a signal. Height 2500 keeps the slope (~0.7/step) close to the 3-peak hills.
+const CONESW = [coneLand(5000, [{ i: 1000, j: 1000, h: 2500 }], 3536), coneLand(5000, [{ i: 4000, j: 4000, h: 2500 }], 3536)];
+// one env step: rewards = neighbours - current over [U, D, L, R]; move; settle x10; learn
+function fieldStep(ag, loc, land) {
+  const M = land.M, f = land.f, i = loc[0], j = loc[1], here = f(i, j);
+  const a = argmaxTie(ag.out(), ag.rng);
+  let ni = i, nj = j;
+  if (a === 0) ni = (i - 1 + M) % M; else if (a === 1) ni = (i + 1) % M; else if (a === 2) nj = (j - 1 + M) % M; else nj = (j + 1) % M;
+  const s = (f(ni, nj) - here) * (ag.hp.gain || 1);
+  loc[0] = ni; loc[1] = nj;
+  for (let t = 0; t < ag.hp.settle; t++) ag.settle(s);
+  ag.learn(s);
+  return { a, s };
+}
+
+if (typeof module !== 'undefined') module.exports = { RNG, PCNet, PaNAgent, detStep, clStep, fieldStep, LAND3, LANDSW, CONES3, CONESW, torusDist, argmaxTie };
+
+</script>
+<script>
+"use strict";
+const T = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["bg","ink","muted","faint","hair","a","b","add","del","land0","land1"]) T[k] = cs.getPropertyValue("--" + k).trim();
+  T.f = '"Instrument Sans", "Helvetica Neue", Arial, sans-serif'; T.ver = (T.ver || 0) + 1;
+}
+readTokens();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { readTokens(); dirty = true; });
+new MutationObserver(() => { readTokens(); dirty = true; }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+document.fonts && document.fonts.ready.then(() => { dirty = true; });
+
+const rgb = h => { const n = h.replace("#", ""); return [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16)); };
+const hexA = (h, a) => `rgba(${rgb(h).join(",")},${a})`;
+const mix = (h1, h2, t) => { const a = rgb(h1), b = rgb(h2); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`; };
+function fit(cv) {
+  const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const ctx = cv.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
+  return { ctx, w: r.width, h: r.height };
+}
+const font = (px, wt = 500) => `${wt} ${px}px ${T.f}`;
+const kfmt = v => v >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + "k" : String(v);
+const $ = id => document.getElementById(id);
+
+// ---------------------------------------------------------------------------
+// Chart with large type: title top-left, 2–3 ticks per axis, labels at line ends
+// ---------------------------------------------------------------------------
+function chart(cv, o) {
+  const { ctx, w, h } = fit(cv);
+  const F = 18, L = 58, R = o.rpad ?? 130, Tp = 50, B = 40, pw = w - L - R, ph = h - Tp - B;
+  if (pw < 60 || ph < 40) return;
+  const X = x => L + (x / o.xmax) * pw, Y = y => Tp + (1 - (y - o.ymin) / (o.ymax - o.ymin)) * ph;
+  ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.fillStyle = o.titleColor || T.ink; ctx.font = font(20, 600);
+  ctx.fillText(o.title, 0, 22);
+  if (o.stat) { ctx.textAlign = "right"; ctx.font = font(20, 500); ctx.fillStyle = o.statColor || T.muted; ctx.fillText(o.stat, w, 26); }
+  for (const s of o.spans || []) { ctx.fillStyle = s.color; ctx.fillRect(X(s.x0), Tp, X(s.x1) - X(s.x0), ph);
+    if (s.label) { ctx.fillStyle = s.labelColor; ctx.font = font(F, 600); ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(s.label, (X(s.x0) + X(s.x1)) / 2, Tp + 8); } }
+  ctx.font = font(16, 500); ctx.textBaseline = "middle"; ctx.textAlign = "right";
+  for (const v of o.yticks) { const y = Math.round(Y(v)) + .5; const zero = v === 0 && o.zeroStrong; ctx.strokeStyle = zero ? T.muted : hexA(T.muted, .55); ctx.lineWidth = zero ? 2 : 1.5; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + pw, y); ctx.stroke(); ctx.fillStyle = T.muted; ctx.fillText(o.yfmt ? o.yfmt(v) : String(v), L - 10, y); }
+  for (const hl of o.hlines || []) { ctx.strokeStyle = T.faint; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(L, Y(hl.y) + .5); ctx.lineTo(L + pw, Y(hl.y) + .5); ctx.stroke(); ctx.setLineDash([]);
+    if (hl.label) { ctx.fillStyle = T.muted; ctx.textAlign = "left"; ctx.font = font(16, 500); ctx.fillText(hl.label, L + pw + 12, Y(hl.y)); } }
+  ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = T.muted; ctx.font = font(16, 500);
+  for (const v of o.xticks) { const tw = ctx.measureText(kfmt(v)).width / 2; ctx.fillText(kfmt(v), Math.max(L + tw, Math.min(L + pw - tw, X(v))), Tp + ph + 12); }
+  for (const v of o.vlines || []) { const x = Math.round(X(v.x)) + .5; ctx.strokeStyle = v.color; ctx.globalAlpha = .55; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, Tp); ctx.lineTo(x, Tp + ph); ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillStyle = v.color; if (v.inside) { ctx.font = font(18, 600); ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(v.label, x + 8, Tp + 8); }
+    else { ctx.font = font(22, 700); ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(v.label, x, Tp - 2); } }
+  for (const m of o.marks || []) { ctx.fillStyle = m.color; ctx.beginPath(); const x = X(m.x), y = Tp + ph + 1; ctx.moveTo(x, y); ctx.lineTo(x - 5, y + 8); ctx.lineTo(x + 5, y + 8); ctx.closePath(); ctx.fill(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(L, Tp - 3, pw, ph + 6); ctx.clip();
+  const ends = [];
+  for (const s of o.series) {
+    if (s.n < 1) continue; ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 3; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.setLineDash(s.dash || []);
+    const path = new Path2D(); for (let i = 0; i < s.n; i++) { const x = X((i + 1) * s.dx), y = Y(Math.min(o.ymax, Math.max(o.ymin, s.data[i]))); i ? path.lineTo(x, y) : path.moveTo(x, y); }
+    if (s.fadeBefore) { const xf = X(s.fadeBefore);
+      ctx.save(); ctx.beginPath(); ctx.rect(L, 0, xf - L, h); ctx.clip(); ctx.globalAlpha = .25; ctx.stroke(path); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(xf, 0, w, h); ctx.clip(); ctx.stroke(path); ctx.restore();
+    } else ctx.stroke(path);
+    ctx.setLineDash([]);
+    const ex = X(s.n * s.dx), ey = Y(Math.min(o.ymax, Math.max(o.ymin, s.data[s.n - 1])));
+    ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(ex, ey, 5, 0, 7); ctx.fill();
+    if (s.label) ends.push({ y: ey, s });
+  }
+  ctx.restore();
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 24) ends[i].y = ends[i - 1].y + 24;
+  ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.font = font(F, 600);
+  for (const e of ends) { ctx.fillStyle = e.s.color; ctx.fillText(e.s.label, L + pw + 14, Math.max(Tp + 8, Math.min(Tp + ph - 8, e.y))); }
+}
+
+// ---------------------------------------------------------------------------
+// Network picture: input, hidden neurons on fixed grid slots, outputs a/b, loop back.
+// Display values are running averages so nothing flickers from step to step.
+// ---------------------------------------------------------------------------
+function netView(net) { const W2 = net.W[1], H = net.sizes[1], sum = [0, 0]; for (let j = 0; j < H; j++) { sum[0] += W2[j * 2]; sum[1] += W2[j * 2 + 1]; } return { sum, H }; }
+function drawGridNet(cv, view, G, st, title, tag) {
+  // Clean schematic: small nodes, hairline connectors, one thin feedback loop from arm a back to the input.
+  const { ctx, w, h } = fit(cv);
+  const now = st.now ?? performance.now(), FADE = st.fade ?? 1600;
+  const cols = G.cols, rows = Math.ceil(G.slots.length / cols);
+  ctx.font = font(20, 600); ctx.fillStyle = T.ink; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillText(title, 0, 22);
+  if (tag) { const tw = ctx.measureText(title).width; ctx.fillStyle = tag.color; ctx.globalAlpha = tag.alpha; ctx.fillText(tag.text, tw + 14, 22); ctx.globalAlpha = 1; }
+  const top = 64, bot = h - 64, gx0 = w * .2, gx1 = w * .55;
+  const cell = Math.min((gx1 - gx0) / cols, (bot - top) / rows, 30), gw = cell * cols, gh = cell * rows;
+  const ox = (gx0 + gx1 - gw) / 2, oy = (top + bot - gh) / 2, cy = oy + gh / 2, r = cell * .24;
+  const xIn = Math.max(40, w * .08), xO = w * .68, dy = Math.max(40, Math.min(70, gh * .3)), yO = [cy - dy, cy + dy], RN = 9;
+  const H = view.H, sum = view.sum, ms = Math.max(sum[0], sum[1], 1e-9), eS = st.eS, eA = st.eA;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  // connectors: input -> each grid row, last column -> outputs (opacity = summed weight onto that output)
+  ctx.lineWidth = 1;
+  for (let rr = 0; rr < rows; rr++) { ctx.strokeStyle = hexA(T.ink, .14); ctx.beginPath(); ctx.moveTo(xIn + RN + 4, cy); ctx.lineTo(ox - 4, oy + (rr + .5) * cell); ctx.stroke(); }
+  for (let k = 0; k < 2; k++) for (let rr = 0; rr < rows; rr++) {
+    ctx.strokeStyle = hexA(k ? T.b : T.a, .1 + .45 * sum[k] / ms); ctx.beginPath(); ctx.moveTo(ox + gw + 4, oy + (rr + .5) * cell); ctx.lineTo(xO - RN - 4, yO[k]); ctx.stroke(); }
+  // hidden neurons
+  const hx = st.hx; let mh = .25; if (hx) for (let j = 0; j < H; j++) mh = Math.max(mh, hx[j]);
+  const base = mix(T.bg, T.ink, .6);
+  G.slots.forEach((s, q) => {
+    const x = ox + (q % cols + .5) * cell, y = oy + (Math.floor(q / cols) + .5) * cell;
+    if (s.j >= 0) {
+      const age = Math.min(1, (now - s.born) / FADE), body = hx ? mix(T.bg, T.ink, .3 + .65 * Math.min(1, hx[s.j] / mh)) : base;
+      ctx.fillStyle = age < 1 ? mix(T.add, T.ink, 0) : body; ctx.globalAlpha = age < 1 ? .4 + .6 * age : 1;
+      if (age < 1) { ctx.fillStyle = T.add; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = age; ctx.fillStyle = body; }
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+    } else {
+      const age = (now - s.died) / FADE;
+      if (age < 1) { ctx.fillStyle = hexA(T.del, .85 * (1 - age)); ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
+      else if (G.showEmpty) { ctx.strokeStyle = hexA(T.ink, .12); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, r * .6, 0, 7); ctx.stroke(); }
+    }
+  });
+  // input node
+  ctx.lineWidth = 1.5;
+  ctx.fillStyle = mix(T.bg, T.a, .1 + .9 * eS); ctx.strokeStyle = T.a; ctx.beginPath(); ctx.arc(xIn, cy, RN, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.font = font(18, 500); ctx.fillStyle = T.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText("s", xIn - RN - 8, cy + 1);
+  // outputs and what each returns
+  for (let k = 0; k < 2; k++) { const c = k ? T.b : T.a, share = k ? 1 - eA : eA;
+    ctx.fillStyle = mix(T.bg, c, .1 + .9 * share); ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(xO, yO[k], RN, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.textAlign = "left"; ctx.font = font(20, 600); ctx.fillStyle = c; ctx.fillText(k ? "b" : "a", xO + RN + 10, yO[k] + 1);
+    ctx.font = font(17, 500); ctx.fillStyle = T.muted; ctx.fillText(k ? "s = 0" : "s = 1", xO + RN + 34, yO[k] + 1); }
+  // feedback: from "a, s = 1" back around the bottom to the input
+  const xr = Math.min(w - 8, xO + RN + 100), yl = Math.min(h - 16, oy + gh + 46);
+  ctx.strokeStyle = mix(T.faint, T.a, .25 + .75 * eS); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(xO + RN + 84, yO[0]); ctx.lineTo(xr - 12, yO[0]); ctx.quadraticCurveTo(xr, yO[0], xr, yO[0] + 12); ctx.lineTo(xr, yl - 12); ctx.quadraticCurveTo(xr, yl, xr - 12, yl);
+  ctx.lineTo(xIn + 12, yl); ctx.quadraticCurveTo(xIn, yl, xIn, yl - 12); ctx.lineTo(xIn, cy + RN + 6); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(xIn, cy + RN + 4); ctx.lineTo(xIn - 5, cy + RN + 11); ctx.moveTo(xIn, cy + RN + 4); ctx.lineTo(xIn + 5, cy + RN + 11); ctx.stroke();
+  ctx.lineWidth = 1;
+}
+function makeGrid(H, cols, capacity, rng) {
+  const slots = Array.from({ length: capacity }, () => ({ j: -1, born: -1e9, died: -1e9 }));
+  const order = [...Array(capacity).keys()]; if (rng) for (let i = capacity - 1; i > 0; i--) { const k = Math.floor(rng.u() * (i + 1)); [order[i], order[k]] = [order[k], order[i]]; }
+  for (let j = 0; j < H; j++) slots[order[j]].j = j;
+  return { cols, slots, showEmpty: !!rng };
+}
+function smooth(st, r, net) {
+  const k = 1 / 400; st.eS += (r.s - st.eS) * k; st.eA += ((r.a === 0) - st.eA) * k;
+  if (net && st.hx) { const x = net.x[1], kk = 1 / 150; for (let j = 0; j < x.length; j++) st.hx[j] += (x[j] - st.hx[j]) * kk; }
+}
+
+// ---------------------------------------------------------------------------
+// Scene 1: reward seeking
+// ---------------------------------------------------------------------------
+const HP_L = { alpha: 0.0164, beta: 0.0072, eta: 0.01 };
+const REW = [1, 0];
+const RS = {
+  T: 100000, bin: 500, N: 16, rate: 5000,
+  reset(seed) {
+    this.nets = Array.from({ length: this.N }, (_, k) => new PCNet([1, 50, 2], HP_L, seed * 131 + k));
+    this.grid = makeGrid(50, 10, 50, null); this.st = new Float64Array(1); this.t = 0; this.k = 0;
+    this.acc = new Float64Array(this.N); this.mean = new Float64Array(this.T / this.bin); this.eS = .5; this.eA = .5; this.hx = new Float64Array(50);
+  },
+  done() { return this.t >= this.T; },
+  advance(n) {
+    for (let s = 0; s < n && this.t < this.T; s++) {
+      for (let k = 0; k < this.N; k++) { const r = detStep(this.nets[k], REW, this.st); this.acc[k] += r.a === 0; if (k === 0) smooth(this, r, this.nets[0]); }
+      this.t++;
+      if (this.t % this.bin === 0) { let m = 0; for (const v of this.acc) m += v; this.mean[this.k++] = m / this.N / this.bin; this.acc.fill(0); }
+    }
+  },
+  draw() {
+    drawGridNet($("r-net"), netView(this.nets[0]), this.grid, this, "Network");
+    chart($("r-pc"), { title: "P(choose a)", xmax: this.T, ymin: 0, ymax: 1, yticks: [0, .5, 1], xticks: [0, 50000, 100000], hlines: [{ y: .5, label: "chance" }], rpad: 90,
+      series: [{ data: this.mean, n: this.k, dx: this.bin, color: T.a, width: 3.5 }] });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Scene 2: neuron turnover
+// ---------------------------------------------------------------------------
+const CH = {
+  // The simulation runs ahead of the display (compute()) and the display plays the recorded
+  // run back at a steady rate, so neither the plot nor the network ever stutters.
+  T: 100000, bin: 250, rec: 100, N: 12, rate: 2500, start: 20000, cap: 100, fade: 5000, smoothBins: 12,
+  reset(seed) {
+    this.K = +$("churnK").value; this.n = +$("churnN").value;
+    this.nets = Array.from({ length: this.N }, (_, k) => new PCNet([1, 50, 2], HP_L, seed * 131 + k));
+    this.ctrl = Array.from({ length: this.N }, (_, k) => new PCNet([1, 50, 2], HP_L, seed * 131 + 500 + k));
+    this.rng = RNG(seed * 7 + 3);
+    this.simGrid = makeGrid(50, 10, this.cap, this.rng);            // slot layout as the simulation evolves
+    this.grid = { cols: 10, showEmpty: true, slots: this.simGrid.slots.map(s => ({ ...s, born: -1e9, died: -1e9 })) }; // what is shown
+    this.st = new Float64Array(1); this.sim = 0; this.t = 0; this.evShown = 0;
+    this.acc = new Float64Array(this.N); this.accC = new Float64Array(this.N);
+    const nb = this.T / this.bin, nr = this.T / this.rec;
+    this.raw = new Float64Array(nb); this.rawC = new Float64Array(nb); this.kb = 0;
+    this.sm = new Float64Array(nb); this.smC = new Float64Array(nb);
+    this.rS = new Float32Array(nr); this.rA = new Float32Array(nr); this.r0 = new Float32Array(nr); this.r1 = new Float32Array(nr); this.rH = new Uint8Array(nr);
+    this.events = []; this.eS = .5; this.eA = .5; this.hx = null;
+  },
+  done() { return this.t >= this.T; },
+  churn() {
+    const H = this.nets[0].sizes[1], n = this.n;
+    const add = H - n < 10 ? true : H + n > this.cap - 5 ? false : this.rng.u() < .5;
+    const ev = { t: this.sim, add, n, slots: [], remap: null };
+    const slots = this.simGrid.slots;
+    for (let k = 0; k < this.N; k++) {
+      const net = this.nets[k];
+      if (add) {
+        if (k === 0) { const empty = slots.map((s, q) => s.j < 0 ? q : -1).filter(q => q >= 0);
+          for (let i = 0; i < n; i++) { const q = empty.splice(Math.floor(this.rng.u() * empty.length), 1)[0]; slots[q].j = H + i; ev.slots.push(q); } }
+        net.addHidden(1, n, 1);
+      } else {
+        const Hk = net.sizes[1], pick = new Set(); while (pick.size < n) pick.add(Math.floor(this.rng.u() * Hk));
+        if (k === 0) { const remap = new Map(); let c = 0; for (let j = 0; j < Hk; j++) if (!pick.has(j)) remap.set(j, c++);
+          slots.forEach((s, q) => { if (s.j >= 0) { if (pick.has(s.j)) { s.j = -1; ev.slots.push(q); } else s.j = remap.get(s.j); } }); }
+        net.removeHidden(1, [...pick].sort((a, b) => a - b));
+      }
+    }
+    this.events.push(ev);
+  },
+  step() {
+    if (this.sim >= this.start && this.sim % this.K === 0) this.churn();
+    for (let k = 0; k < this.N; k++) {
+      const r = detStep(this.nets[k], REW, this.st); this.acc[k] += r.a === 0; if (k === 0) smooth(this, r, null);
+      this.accC[k] += detStep(this.ctrl[k], REW, this.st).a === 0;
+    }
+    this.sim++;
+    if (this.sim % this.rec === 0) { const i = this.sim / this.rec - 1, v = netView(this.nets[0]);
+      this.rS[i] = this.eS; this.rA[i] = this.eA; this.r0[i] = v.sum[0]; this.r1[i] = v.sum[1]; this.rH[i] = v.H; }
+    if (this.sim % this.bin === 0) {
+      let m = 0, mc = 0; for (let k = 0; k < this.N; k++) { m += this.acc[k]; mc += this.accC[k]; }
+      const i = this.kb++; this.raw[i] = m / this.N / this.bin; this.rawC[i] = mc / this.N / this.bin; this.acc.fill(0); this.accC.fill(0);
+      const w = Math.min(i + 1, this.smoothBins); let s1 = 0, s2 = 0; for (let j = i - w + 1; j <= i; j++) { s1 += this.raw[j]; s2 += this.rawC[j]; }
+      this.sm[i] = s1 / w; this.smC[i] = s2 / w;
+    }
+  },
+  compute(budgetMs) { const t0 = performance.now(); while (this.sim < this.T && performance.now() - t0 < budgetMs) for (let i = 0; i < 50 && this.sim < this.T; i++) this.step(); },
+  advance(n) { this.t = Math.min(this.T, this.t + n, this.sim); },
+  draw() {
+    const t = this.t, ri = Math.max(0, Math.floor(t / this.rec) - 1);
+    // replay structural events up to the playback time
+    while (this.evShown < this.events.length && this.events[this.evShown].t <= t) {
+      const ev = this.events[this.evShown++];
+      for (const q of ev.slots) { const s = this.grid.slots[q]; if (ev.add) { s.j = 1; s.born = ev.t; } else { s.j = -1; s.died = ev.t; } }
+    }
+    const view = { sum: [this.r0[ri], this.r1[ri]], H: this.rH[ri] || 50 };
+    const shown = { eS: t ? this.rS[ri] : .5, eA: t ? this.rA[ri] : .5, hx: null, now: t, fade: this.fade };
+    const lastEv = this.events[this.evShown - 1], age = lastEv ? (t - lastEv.t) / (this.fade * 1.6) : 9;
+    const tag = age < 1 ? { text: `${lastEv.add ? "+" : "−"}${lastEv.n}`, color: lastEv.add ? T.add : T.del, alpha: 1 - age * age } : null;
+    drawGridNet($("c-net"), view, this.grid, shown, `${view.H} hidden neurons`, tag);
+    const nb = Math.floor(t / this.bin), vis = this.events.slice(0, this.evShown);
+    chart($("c-pc"), { title: "P(choose a)", xmax: this.T, ymin: 0, ymax: 1, yticks: [0, .5, 1], xticks: [0, 50000, 100000], hlines: [{ y: .5 }], rpad: 120,
+      vlines: vis.map(e => ({ x: e.t, color: e.add ? T.add : T.del, label: e.add ? "+" : "−" })),
+      series: [{ data: this.smC, n: nb, dx: this.bin, color: T.muted, width: 2.5, dash: [6, 6], label: "intact" },
+               { data: this.sm, n: nb, dx: this.bin, color: T.a, width: 3.5, label: "turnover" }] });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Scene 3: continual learning, PC vs RPE
+// ---------------------------------------------------------------------------
+const CL = {
+  // Six long blocks (A B A B A B). Simulated ahead of playback; lines are the median over 32 seeds,
+  // smoothed with a 10k-step running mean, so the display moves steadily.
+  NB: 6, N: 32, bin: 1000, rate: 25000, W: 10,
+  rules: [{ name: "Hebbian", hp: { alpha: 0.0373, beta: 0.0072, eta: 0.01 } }, { name: "RPE (three-factor)", hp: { rule: "RPE", alpha: 0.439, beta: 1, eta: 0.01 } }],
+  reset(seed) {
+    this.L = +$("blockL").value; this.T = this.L * this.NB; this.nb = this.T / this.bin; this.t = 0; this.sim = 0; this.k = 0; this.st = new Float64Array(2);
+    this.R = this.rules.map((r, ri) => ({ nets: Array.from({ length: this.N }, (_, k) => new PCNet([2, 2], r.hp, seed * 131 + ri * 1000 + k)),
+      med: [new Float64Array(this.nb), new Float64Array(this.nb)], sm: [new Float64Array(this.nb), new Float64Array(this.nb)], scale: .05 }));
+    this.tmp = new Float64Array(this.N);
+  },
+  done() { return this.t >= this.T; },
+  step() {
+    const c = Math.floor(this.sim / this.L) % 2, tmp = this.tmp;
+    for (const R of this.R) for (let k = 0; k < this.N; k++) clStep(R.nets[k], c, this.st);
+    this.sim++;
+    if (this.sim % this.bin === 0) {
+      const i = this.k++;
+      for (const R of this.R) for (let ch = 0; ch < 2; ch++) {
+        for (let k = 0; k < this.N; k++) { const W = R.nets[k].W[0]; tmp[k] = ch === 0 ? W[0] - W[1] : W[3] - W[2]; }
+        tmp.sort(); R.med[ch][i] = (tmp[(this.N >> 1) - 1] + tmp[this.N >> 1]) / 2;
+        const w = Math.min(i + 1, this.W); let a = 0; for (let j = i - w + 1; j <= i; j++) a += R.med[ch][j]; const m = R.sm[ch][i] = a / w;
+        if (this.sim === this.L + this.bin && ch === 0) R.scale = .01;  // after block 1, scale to learned values
+        R.scale = Math.max(R.scale, Math.abs(m) * 1.3);
+      }
+    }
+  },
+  compute(budgetMs) { const t0 = performance.now(); while (this.sim < this.T && performance.now() - t0 < budgetMs) for (let i = 0; i < 100 && this.sim < this.T; i++) this.step(); },
+  advance(n) { this.t = Math.min(this.T, this.t + n, this.sim); },
+  draw() {
+    const cur = Math.floor(Math.min(this.t, this.T - 1) / this.L), n = Math.floor(this.t / this.bin);
+    const xt = []; for (let b = 0; b <= this.NB; b += 2) xt.push(b * this.L);
+    this.R.forEach((R, ri) => {
+      const spans = []; for (let b = 0; b < this.NB; b++) spans.push({ x0: b * this.L, x1: (b + 1) * this.L, color: hexA(b % 2 ? T.b : T.a, b === cur && !this.done() ? .16 : .06), label: b % 2 ? "B" : "A", labelColor: b % 2 ? T.b : T.a });
+      chart($("l-ch" + ri), { title: this.rules[ri].name, xmax: this.T, ymin: -R.scale * .3, ymax: R.scale, yticks: [0], yfmt: () => "0", zeroStrong: true, hlines: [], spans, xticks: xt, rpad: 120,
+        series: [0, 1].map(ch => ({ data: R.sm[ch], n, dx: this.bin, color: ch ? T.b : T.a, width: 3.5, label: ch ? "B memory" : "A memory", fadeBefore: this.L })) });
+    });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Scene 4: open field (PaN)
+// ---------------------------------------------------------------------------
+// Open-field agent: tiny PaN network (1 input -> 4 motor neurons) on round hills.
+// Tuned for this page (not the 2024 paper): higher activity noise and weight learning rate.
+const HP_OF = { sizes: [1, 4], alpha: 0.01, omega: 0.1, etaA: 0.03, etaW: 0.001 };
+const OF = {
+  bin: 1000, every: 25, thr: .7,
+  reset(seed) {
+    this.sw = $("land").value === "sw";
+    this.near = this.sw ? 400 : 300;                                   // "at a summit" = within this many cells of a peak
+    this.chance = this.sw ? Math.PI * 400 * 400 / 25e6 : 3 * Math.PI * 300 * 300 / 16e6; // area fraction
+    this.rate = this.sw ? 4000 : 6000;
+    this.T = 500000; this.nb = this.T / this.bin; this.t = 0; this.k = 0; this.landIdx = 0;
+    this.land = this.sw ? CONESW[0] : CONES3;
+    this.ag = new PaNAgent(92 + 15 * seed, Object.assign({}, HP_OF, this.sw ? { stopInputGrad: true } : {}));
+    const r = RNG(seed * 17 + 1); this.loc = [Math.floor(r.u() * this.land.M), Math.floor(r.u() * this.land.M)];
+    this.trail = new Float32Array(2 * this.T / this.every); this.tmode = new Uint8Array(this.T / this.every); this.tn = 0;
+    this.hmean = new Float64Array(this.nb); this.summit = new Float64Array(this.nb); this.hacc = 0; this.sacc = 0; this.atTot = 0;
+    this.landImg = null; this.switches = [];
+  },
+  done() { return this.t >= this.T; },
+  atSummit(i, j) { for (const p of this.land.peaks) if (torusDist(i, j, p, this.land.M) < this.near) return 1; return 0; },
+  advance(n) {
+    for (let s = 0; s < n && this.t < this.T; s++) {
+      if (this.sw && this.t > 0 && this.t % 50000 === 0) { this.landIdx = 1 - this.landIdx; this.land = CONESW[this.landIdx]; this.landImg = null; this.switches.push(this.t); }
+      fieldStep(this.ag, this.loc, this.land);
+      const i = this.loc[0], j = this.loc[1], h = this.land.f(i, j), at = this.atSummit(i, j);
+      this.hacc += h; this.sacc += at; this.atTot += at; this.t++;
+      if (this.t % this.every === 0) { this.trail[this.tn * 2] = i; this.trail[this.tn * 2 + 1] = j; this.tmode[this.tn] = at; this.tn++; }
+      if (this.t % this.bin === 0) { this.hmean[this.k] = this.hacc / this.bin; this.summit[this.k] = this.sacc / this.bin; this.k++; this.hacc = 0; this.sacc = 0; }
+    }
+  },
+  // Thin time strip under the field: height under the agent, summit periods shaded, one short label each side.
+  drawStrip(ctx, x0, y0, W, H) {
+    const lab = 26, top = y0 + lab, ph = H - lab, ymax = this.sw ? 2600 : 1050;
+    const X = t => x0 + t / this.T * W, Y = v => top + ph * (1 - v / ymax);
+    ctx.font = font(17, 600); ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.fillStyle = T.muted; ctx.fillText("Height over time", x0, y0 + 18);
+    if (this.t) { const txt = `${Math.round(100 * this.atTot / this.t)}% near a summit (chance ${Math.round(100 * this.chance)}%)`;
+      ctx.textAlign = "right"; ctx.fillStyle = T.a; if (ctx.measureText(txt).width + 170 < W) ctx.fillText(txt, x0 + W, y0 + 18); }
+    ctx.fillStyle = hexA(T.ink, .04); ctx.fillRect(x0, top, W, ph);
+    for (let b = 0; b < this.k; b++) if (this.summit[b] > .5) { ctx.fillStyle = hexA(T.a, .28); ctx.fillRect(X(b * this.bin), top, Math.max(1, X(this.bin) - x0), ph); }
+    for (const t of this.switches) { ctx.fillStyle = hexA(T.muted, .7); ctx.fillRect(X(t) - 1, top, 2, ph); }
+    ctx.strokeStyle = T.ink; ctx.lineWidth = 1.5; ctx.lineJoin = "round"; ctx.beginPath();
+    for (let i = 0; i < this.k; i++) { const x = X((i + 1) * this.bin), y = Y(this.hmean[i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke(); ctx.lineWidth = 1;
+  },
+  makeLand() {
+    const R = 200, c = document.createElement("canvas"); c.width = c.height = R; const g = c.getContext("2d"), img = g.createImageData(R, R);
+    const c0 = rgb(T.land0), c1 = rgb(T.land1), M = this.land.M;
+    for (let y = 0; y < R; y++) for (let x = 0; x < R; x++) {
+      const q = Math.floor(this.land.f((y + .5) / R * M, (x + .5) / R * M) / (this.sw ? 2500 : 1000) * 5) / 5, o = (y * R + x) * 4;
+      for (let k = 0; k < 3; k++) img.data[o + k] = c0[k] + (c1[k] - c0[k]) * q; img.data[o + 3] = 255;
+    }
+    g.putImageData(img, 0, 0); return c;
+  },
+  draw() {
+    // Field square, centred, as large as fits above a thin height strip.
+    const { ctx, w, h } = fit($("o-map")), STRIP = 96, GAP = 14;
+    const S = Math.max(100, Math.min(w, h - STRIP - GAP)), ox = Math.round((w - S) / 2), oy = 0, sc = S / this.land.M;
+    if (!this.landImg || this.landVer !== T.ver) { this.landImg = this.makeLand(); this.landVer = T.ver; }
+    ctx.imageSmoothingEnabled = false; ctx.drawImage(this.landImg, ox, oy, S, S);
+    // trail: grey while travelling, orange near a summit; older points fainter
+    const n = this.tn, step = Math.max(1, Math.floor(n / 12000));
+    for (let q = 0; q < n; q += step) { const age = q / Math.max(1, n), a = .25 + .75 * age;
+      ctx.fillStyle = this.tmode[q] ? hexA(T.a, a) : hexA(T.ink, .12 + .4 * age);
+      const sz = this.tmode[q] ? 3 : 2; ctx.fillRect(ox + this.trail[q * 2 + 1] * sc - sz / 2, oy + this.trail[q * 2] * sc - sz / 2, sz, sz); }
+    const peaks = this.sw ? CONESW.map((L, li) => ({ ...L.peaks[0], on: li === this.landIdx })) : this.land.peaks.map(p => ({ ...p, on: true }));
+    ctx.font = font(18, 600); ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    for (const p of peaks) { const x = ox + p.j * sc, y = oy + p.i * sc; ctx.strokeStyle = p.on ? T.ink : T.faint; ctx.fillStyle = p.on ? T.ink : "transparent"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x + 8, y + 6); ctx.lineTo(x - 8, y + 6); ctx.closePath(); ctx.stroke(); if (p.on) ctx.fill();
+      ctx.fillStyle = p.on ? T.ink : T.muted; ctx.fillText(p.h, x, y - 12); }
+    const axp = ox + this.loc[1] * sc, ayp = oy + this.loc[0] * sc;
+    ctx.fillStyle = T.a; ctx.strokeStyle = T.bg; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(axp, ayp, 8, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 1;
+    const spans = []; for (let b = 0; b < this.k; b++) if (this.summit[b] > .5) spans.push({ x0: b * this.bin, x1: (b + 1) * this.bin, color: hexA(T.a, .2) });
+    for (const t of this.switches) spans.push({ x0: t - 800, x1: t + 800, color: hexA(T.muted, .6) });
+    this.drawStrip(ctx, ox, S + GAP, S, STRIP);
+  },
+};
+
+// ---------------------------------------------------------------------------
+// App shell
+// ---------------------------------------------------------------------------
+const COVER = { T: 0, t: 0, rate: 0, reset() {}, done() { return true; }, draw() {} };
+const SC = { intro: COVER, reward: RS, churn: CH, continual: CL, openfield: OF };
+let cur = "intro", playing = true, speedExp = 0, dirty = true;
+// one seed per tab; typed seeds are remembered in this browser
+let seeds = { intro: 1, reward: 1, churn: 1, continual: 1, openfield: 1 };
+try { Object.assign(seeds, JSON.parse(localStorage.getItem("seeds") || "{}")); } catch (e) {}
+function saveSeeds() { try { localStorage.setItem("seeds", JSON.stringify(seeds)); } catch (e) {} }
+// favourite seeds per tab, remembered in this browser
+let favs = { intro: [], reward: [], churn: [], continual: [], openfield: [] };
+try { Object.assign(favs, JSON.parse(localStorage.getItem("favs") || "{}")); } catch (e) {}
+function syncFav() {
+  const list = favs[cur] || [], on = list.includes(seeds[cur]);
+  $("fav").textContent = on ? "★" : "☆"; $("fav").setAttribute("aria-pressed", on);
+  const sel = $("favs"); sel.hidden = !list.length;
+  sel.innerHTML = `<option value="">★ ${list.length} saved</option>` + list.map(v => `<option value="${v}">seed ${v}</option>`).join("");
+  sel.value = "";
+}
+function toggleFav() {
+  const list = favs[cur] = favs[cur] || [], v = seeds[cur], i = list.indexOf(v);
+  if (i >= 0) list.splice(i, 1); else { list.push(v); list.sort((a, b) => a - b); }
+  try { localStorage.setItem("favs", JSON.stringify(favs)); } catch (e) {}
+  syncFav();
+}
+const started = {};
+function show(tab) {
+  if (!SC[tab]) tab = "intro"; cur = tab;
+  document.body.classList.toggle("on-cover", tab === "intro");
+  for (const k in SC) $("tab-" + k).hidden = k !== tab;
+  document.querySelectorAll("nav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab === tab ? "page" : "false"));
+  document.querySelectorAll(".opt").forEach(o => o.hidden = o.dataset.for !== tab);
+  const sec = $("tab-" + tab); $("title").textContent = sec.dataset.title;
+  const order = ["reward", "churn", "continual", "openfield"]; $("eyebrow").textContent = order.includes(tab) ? `Demo ${order.indexOf(tab) + 1} of 4` : ""; $("title").title = sec.dataset.info; $("clock").title = sec.dataset.info;
+  $("seed").value = seeds[tab]; syncFav();
+  if (!started[tab]) { SC[tab].reset(seeds[tab]); started[tab] = true; }
+  playing = !SC[tab].done(); $("play").textContent = playing ? "Pause" : "Replay";
+  dirty = true;
+}
+function resetCur(newSeed) {
+  if (newSeed) { seeds[cur] = 1 + Math.floor(Math.random() * 9999); $("seed").value = seeds[cur]; saveSeeds(); }
+  syncFav();
+  SC[cur].reset(seeds[cur]); started[cur] = true; dirty = true; playing = true; $("play").textContent = "Pause";
+}
+$("fav").onclick = toggleFav;
+$("favs").onchange = () => { const v = +$("favs").value; if (!v) return; seeds[cur] = v; $("seed").value = v; saveSeeds(); resetCur(false); };
+$("seed").onchange = () => { const v = Math.max(1, Math.min(99999, Math.round(+$("seed").value) || 1)); $("seed").value = v; seeds[cur] = v; saveSeeds(); resetCur(false); };
+function togglePlay() { if (SC[cur].done()) return resetCur(false); playing = !playing; $("play").textContent = playing ? "Pause" : "Play"; }
+function setSpeed(e) { speedExp = Math.max(-3, Math.min(4, e)); $("speed").value = speedExp; $("speedv").textContent = (speedExp < 0 ? "1/" + (2 ** -speedExp) : 2 ** speedExp) + "×"; }
+$("play").onclick = togglePlay;
+$("reset").onclick = () => resetCur(true);
+$("speed").oninput = e => setSpeed(+e.target.value);
+$("churnK").onchange = $("churnN").onchange = $("blockL").onchange = $("land").onchange = () => resetCur(false);
+addEventListener("keydown", e => {
+  if (e.target.closest("select,input")) return;
+  if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+  else if (e.key === "r" || e.key === "R") resetCur(true);
+  else if (e.key === "f" || e.key === "F") toggleFav();
+  else if (e.key === "ArrowRight") setSpeed(speedExp + 1);
+  else if (e.key === "ArrowLeft") setSpeed(speedExp - 1);
+  else if ("01234".includes(e.key) && e.key.length === 1) location.hash = ["intro", "reward", "churn", "continual", "openfield"][+e.key];
+});
+addEventListener("hashchange", () => show(location.hash.slice(1)));
+addEventListener("resize", () => { dirty = true; });
+
+let carry = 0, last = performance.now();
+function frame(now) {
+  const dt = Math.min(.1, (now - last) / 1000); last = now;
+  const sc = SC[cur];
+  if (sc.compute) { sc.compute(14); if (sc.sim < sc.T) dirty = true; }
+  if (playing && !sc.done()) {
+    carry += sc.rate * 2 ** speedExp * dt; let want = Math.floor(carry); carry -= want;
+    const t0 = performance.now();
+    while (want > 0 && performance.now() - t0 < 30) { const c = Math.min(want, 250); sc.advance(c); want -= c; }
+    if (want > 0) carry = 0;
+    dirty = true;
+    if (sc.done()) { playing = false; $("play").textContent = "Replay"; }
+  }
+  if (dirty) { sc.draw(); $("clock").textContent = `step ${kfmt(sc.t)} / ${kfmt(sc.T)}`; dirty = false; }
+  requestAnimationFrame(frame);
+}
+setSpeed(0);
+show(location.hash.slice(1) || "intro");
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
