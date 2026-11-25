@@ -16,7 +16,7 @@ Most tabs let you switch between seven local learning rules: PC (prospective con
 | 6 Deterministic (attractors) | World-in-the-loop dynamics in (x_in, W_diff, X_diff) space, with choice raster and P(choose a) | 1–2 network (main Fig. 1i,j); fixed points drawn for PC |
 | 7 Matching pennies (attractors) | Alternating 20k-step phases against a pattern-predicting computer opponent and a coin flip; choices and 3-bit choice entropy | 1–2 network, each rule at its Fig. 3h–k cell |
 
-Hover over a tab's title to see its full parameters. On the 3D plots, drag to rotate and double-click to reset the view.
+Each tab has a short blurb next to its title describing what is being simulated. Hover over the title to see the full parameters. On the 3D plots, drag to rotate and double-click to reset the view.
 
 ## Controls
 

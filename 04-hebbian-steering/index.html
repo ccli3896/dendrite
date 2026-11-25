@@ -40,7 +40,10 @@ nav.seg a[aria-current="page"] { color: var(--ink); background: var(--bg); box-s
 nav.seg a[aria-current="page"] .n { color: var(--a); }
 a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--a); outline-offset: 2px; }
 
-.head { padding-top: 22px; }
+.head { padding-top: 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 40px; flex-wrap: wrap; }
+.head > div { flex: none; }
+.blurb { margin: 0; flex: 1 1 380px; max-width: 46em; font-size: 15px; line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+.blurb:empty { display: none; }
 .eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
 h1 { margin: 4px 0 0; font-size: 34px; font-weight: 600; letter-spacing: -.02em; line-height: 1.1; }
 
@@ -119,7 +122,7 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
       <a href="#amp" data-tab="amp"><span class="n">7</span>Matching pennies</a>
     </nav>
   </div>
-  <div class="head"><div class="eyebrow" id="eyebrow">Demo 1 of 4</div><h1 id="title">Reward seeking</h1></div>
+  <div class="head"><div><div class="eyebrow" id="eyebrow">Demo 1 of 4</div><h1 id="title">Reward seeking</h1></div><p class="blurb" id="blurb"></p></div>
 </header>
 
 <main>
@@ -130,7 +133,7 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
       <p>Reward-seeking behavior emerges from local dynamics</p>
     </div>
   </section>
-  <section class="tab" id="tab-passive" data-title="Same input, different rules" hidden style="grid-template-rows:auto minmax(0,1fr);column-gap:36px;row-gap:16px"
+  <section class="tab" id="tab-passive" data-blurb="Two neurons joined by one plastic weight w. The input x₀ is driven on (s = 1), then off (s = 0). Every rule gets the same input and noise, so differences in x₀, x₁ and w come from the rule alone." data-title="Same input, different rules" hidden style="grid-template-rows:auto minmax(0,1fr);column-gap:36px;row-gap:16px"
     data-info="2-neuron network (main Fig. 1a) · input s = 1 for 500 steps, then 0 · α 0.01, β 0.01, η 0.005, τ 0.01 (rules with running averages) · start x₀ 0, x₁ 1, w 0.75 · every rule gets the same noise · drag the 3D plot to rotate, double-click to reset">
     <div class="chks" id="chks" role="group" aria-label="Rules to plot">
       <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="checkbox" value="PC" checked>PC</label>
@@ -144,7 +147,7 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
     <div class="cv"><canvas id="p-traj"></canvas></div>
     <div class="cv"><canvas id="p-ts"></canvas></div>
   </section>
-  <section class="tab" id="tab-reward" data-title="Reward seeking"
+  <section class="tab" id="tab-reward" data-blurb="A 1–50–2 network picks arm a or b on every step. Choosing a feeds input back to the sensory neuron; choosing b does not. Weights change only through each rule's local update. Pick a rule to see whether that alone steers choices toward a." data-title="Reward seeking"
     data-info="1–50–2 network, each rule at its large-network reward-seeking operating point (Supp. Table params; main Fig. 1f) · choosing a returns s = 1 to the input neuron, b returns 0 · curve: mean of 16 networks">
     <div class="chks" id="rchks" role="radiogroup" aria-label="Learning rule">
       <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="radio" autocomplete="off" name="rrule" value="PC" checked>PC</label>
@@ -158,21 +161,21 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
     <div class="cv"><canvas id="r-net"></canvas></div>
     <div class="cv"><canvas id="r-pc"></canvas></div>
   </section>
-  <section class="tab" id="tab-churn" data-title="Neuron turnover" hidden
+  <section class="tab" id="tab-churn" data-blurb="The same reward task with the PC rule. From step 20k, batches of hidden neurons are randomly removed or new random ones are added. The turnover curve is compared with intact networks that keep all their neurons." data-title="Neuron turnover" hidden
     data-info="Same task and PC parameters. From step 20k, random hidden neurons are removed or new random ones added in batches · curves: mean of 12 networks each">
     <div class="cv"><canvas id="c-net"></canvas></div>
     <div class="cv"><canvas id="c-pc"></canvas></div>
   </section>
-  <section class="tab one" id="tab-continual" data-title="Continual learning" hidden
+  <section class="tab one" id="tab-continual" data-blurb="A 2–2 network switches between two contexts. In A, input A is rewarded for choosing a; in B, input B is rewarded for choosing b. The lines track how strongly each input channel prefers its own arm across blocks, for a Hebbian (PC) rule and an RPE three-factor rule." data-title="Continual learning" hidden
     data-info="2–2 network. Context A: reward on input A for choosing a. Context B: reward on input B for choosing b. Lines: π_A = w(A→a) − w(A→b) and π_B = w(B→b) − w(B→a), median of 32 seeds, 10k-step running mean. Hebbian (PC rule) α 0.0373 β 0.0072; RPE α 0.439 β 1; η 0.01">
     <div class="cv"><canvas id="l-ch0"></canvas></div>
     <div class="cv"><canvas id="l-ch1"></canvas></div>
   </section>
-  <section class="tab" id="tab-openfield" data-title="Open field" hidden style="grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)"
+  <section class="tab" id="tab-openfield" data-blurb="An agent roams a landscape of round hills, sensing only the change in height from step to step. Driven by neuron-level prediction and noise (PaN), it climbs toward summits and moves between them. Its trail turns rose near a peak." data-title="Open field" hidden style="grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)"
     data-info="PaN model (Li et al. 2024) · tiny 1–4 network (no hidden layer) · α 0.01 · ω 0.1 · η_x 0.03 · η_W 1e-3 · 10 settling steps · round hills · input = change in height · rose trail = within 300 cells of a peak">
     <div class="cv"><canvas id="o-map"></canvas></div>
   </section>
-  <section class="tab att" id="tab-adet" data-title="Deterministic task" hidden
+  <section class="tab att" id="tab-adet" data-blurb="The reward task shrunk to a 1–2 network, so the whole state fits in 3D: input activity x_in, weight difference W_diff and output difference X_diff. Choosing a returns s = 1 and choosing b returns 0. Watch where each rule's state settles; red lines mark PC's fixed points." data-title="Deterministic task" hidden
     data-info="1–2 network (main Fig. 1i,j) · PC: α 0.02, β 0.03, η 0.008, activities capped at 3 (Fig. 1j); other rules: parameters shown on the plot · choosing a returns s = 1, b returns 0 · red lines (PC only): fixed points · axes: input activity x_in, W_diff = w_a − w_b, X_diff = x_a − x_b · drag to rotate, double-click to reset">
     <div class="chks" role="radiogroup" aria-label="Learning rule" style="grid-column:1/-1">
       <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="radio" autocomplete="off" name="adrule" value="PC" checked>PC</label>
@@ -186,7 +189,7 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
     <div class="cv"><canvas id="ad-3d"></canvas></div>
     <div class="stack"><div class="cv"><canvas id="ad-raster"></canvas></div><div class="cv"><canvas id="ad-plot"></canvas></div></div>
   </section>
-  <section class="tab att" id="tab-amp" data-title="Matching pennies" hidden
+  <section class="tab att" id="tab-amp" data-blurb="Matching pennies on the same 1–2 network, alternating between a computer opponent that exploits predictable choices and a fair coin flip (reward half the time). Watch the state move as the opponent changes, and how predictable the choices get (3 bits = fully random)." data-title="Matching pennies" hidden
     data-info="1–2 network, each rule at its Fig. 3h–k cell (OJA: sweep cell with a larger drop) · red line (PC only): fixed points for mean input s̄ = 0.5 (x_in = 0.5, X_diff = 0.5 W_diff) · alternating 20k-step phases: computer opponent (predicts the next choice from the last 3, z-test p &lt; 0.05; win when it guesses wrong) and coin flip (reward with p = 0.5) · network carried across phases · dots: last 6k steps · drag to rotate, double-click to reset">
     <div class="chks" role="radiogroup" aria-label="Learning rule" style="grid-column:1/-1">
       <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="radio" autocomplete="off" name="amrule" value="PC" checked>PC</label>
@@ -1289,7 +1292,7 @@ function show(tab) {
   for (const k in SC) $("tab-" + k).hidden = k !== tab;
   document.querySelectorAll("nav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab === tab ? "page" : "false"));
   document.querySelectorAll(".opt").forEach(o => o.hidden = o.dataset.for !== tab);
-  const sec = $("tab-" + tab); $("title").textContent = sec.dataset.title;
+  const sec = $("tab-" + tab); $("title").textContent = sec.dataset.title; $("blurb").textContent = sec.dataset.blurb || "";
   const order = ["passive", "reward", "churn", "continual", "openfield"], att = ["adet", "amp"];
   $("eyebrow").textContent = order.includes(tab) ? `Demo ${order.indexOf(tab) + 1} of ${order.length}` : att.includes(tab) ? `Attractors · ${att.indexOf(tab) + 1} of ${att.length}` : ""; $("title").title = sec.dataset.info; $("clock").title = sec.dataset.info;
   $("seed").value = seeds[tab]; syncFav();
