@@ -2,7 +2,7 @@
 
 Live site: https://ccli3896.github.io/dendrite/04-hebbian-steering/
 
-A single self-contained page (`index.html`) with a title slide, five demos and two attractor views. Every simulation runs live in the browser in plain JavaScript; nothing is precomputed. The page is laid out for a 16:10 (laptop) screen, with the picture and the plot side by side.
+A single self-contained page (`index.html`) with a title slide, five demos and two attractor views. Every simulation runs live in the browser in plain JavaScript; nothing is precomputed. On a laptop the page is a 16:10 stage with the picture and the plot side by side. On phones, portrait tablets and short screens it switches to one scrolling column, with the controls at the top and the tab bar scrolling sideways.
 
 Most tabs let you switch between seven local learning rules: PC (prospective configuration), BCM, Oja, Law & Cooper (LC), covariance (COV), latent predictive learning (LPL) and an RPE-gated three-factor rule.
 

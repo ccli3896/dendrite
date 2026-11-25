@@ -5,12 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Live simulations: reward-seeking behavior emerging from local Hebbian-like plasticity.">
 <title>Hebbian steering</title>
+<link rel="canonical" href="https://ccli3896.github.io/dendrite/04-hebbian-steering/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ccli3896.github.io/dendrite/04-hebbian-steering/">
+<meta property="og:title" content="Reward seeking without a reward term">
+<meta property="og:description" content="Live simulations: local Hebbian-like plasticity learns to seek reward when reward arrives as ordinary input.">
+<meta property="og:image" content="https://ccli3896.github.io/dendrite/04-hebbian-steering/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A 3-neuron network's state settling onto a line attractor as it learns to choose the rewarded option.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reward seeking without a reward term">
+<meta name="twitter:description" content="Live simulations: local Hebbian-like plasticity learns to seek reward when reward arrives as ordinary input.">
+<meta name="twitter:image" content="https://ccli3896.github.io/dendrite/04-hebbian-steering/og-card.png">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: a 16:10 (laptop) stage centred on any screen; picture and plot sit side by side. Big title, one picture + one plot, almost no text.
+/* Layout: a 16:10 (laptop) stage centred on any screen; picture and plot sit side by side (phones: one scrolling column, see the @media block below). Big title, one picture + one plot, almost no text.
    Colour: rose = reward / rewarded arm a, teal = arm b; green / amber only for added / removed neurons. */
 :root {
   --frame: #efeeea; --bg: #fcfcfa; --well: #f0f0ed; --line: #dcdfe3;
@@ -107,6 +120,49 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
 .chk input:focus-visible { outline: none; }
 #p-traj { cursor: grab; touch-action: none; }
 #p-traj:active { cursor: grabbing; }
+
+/* ---- Phones, portrait tablets and short landscape screens: one scrolling column ---- */
+@media (max-width: 760px), (max-height: 520px), (orientation: portrait) and (max-width: 1100px) {
+  html, body { height: auto; }
+  body { display: block; background: var(--bg); }
+  .stage { width: 100%; height: auto; min-height: 100vh; min-height: 100dvh;
+    padding: 10px max(14px, env(safe-area-inset-right, 0px)) 0 max(14px, env(safe-area-inset-left, 0px)); }
+  .topbar { padding-bottom: 10px; }
+  nav.seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  nav.seg::-webkit-scrollbar { display: none; }
+  nav.seg a, nav.seg .grp-lab { flex: none; }
+  .head { padding-top: 14px; gap: 8px; }
+  h1 { font-size: 27px; }
+  .blurb { flex-basis: auto; font-size: 14.5px; }
+  body.on-cover .head { display: none; }
+  main { display: block; padding-top: 14px; }
+  main > .tab:not([hidden]) { display: flex !important; flex-direction: column; gap: 20px; }
+  .tab.cover { justify-content: flex-start; padding-top: 7vh; }
+  .cover-in { margin-bottom: 4vh; }
+  .cover h2 { font-size: 42px; }
+  .cover p { font-size: 18px; }
+  .cover .papers { margin-top: 28px; gap: 6px; }
+  .cover .papers .pt { font-size: 15px; }
+  .chks { gap: 6px; }
+  .chk { height: 36px; padding: 0 12px 0 10px; gap: 7px; font-size: 15px; border-width: 1px; }
+  .chk input { width: 16px; height: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .cv { flex: none; height: 280px; }
+  .cv:has(> #p-traj) { height: 380px; }
+  .cv:has(> #p-ts) { height: 300px; }
+  .cv:has(> #r-net), .cv:has(> #c-net) { height: 270px; }
+  .cv:has(> #ad-3d), .cv:has(> #am-3d) { height: 440px; }
+  .cv:has(> #ad-raster), .cv:has(> #am-raster) { height: 160px; }
+  .cv:has(> #ad-plot), .cv:has(> #am-plot) { height: 230px; }
+  .cv:has(> #l-ch0), .cv:has(> #l-ch1) { height: 230px; }
+  .cv:has(> #o-map) { height: calc(min(100vw, 640px) - 28px + 110px); }
+  /* vertical swipes scroll the page; horizontal drags still rotate the 3D plots */
+  #ad-3d, #am-3d, #p-traj { touch-action: pan-y; }
+  footer { order: 1; margin-top: 14px; padding: 10px 0; gap: 8px 12px; border-bottom: 1px solid var(--hair); }
+  main { order: 2; padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+  footer .grp { gap: 6px; }
+  input[type=range] { width: 84px; }
+}
 @container (max-width: 740px) { .brand { display: none; } .topbar { justify-content: center; } }
 @container (max-width: 520px) { nav.seg a { padding: 6px 8px; } nav.seg a .n { display: none; } }
 </style>
@@ -562,7 +618,7 @@ function chart(cv, o) {
   if (o.sub) { const tw = ctx.measureText(o.title).width; ctx.font = font(15, 500); ctx.fillStyle = T.muted; ctx.fillText(o.sub, tw + 14, 22); }
   if (o.stat) { ctx.textAlign = "right"; ctx.font = font(20, 500); ctx.fillStyle = o.statColor || T.muted; ctx.fillText(o.stat, w, 26); }
   for (const s of o.spans || []) { ctx.fillStyle = s.color; ctx.fillRect(X(s.x0), Tp, X(s.x1) - X(s.x0), ph);
-    if (s.label) { ctx.fillStyle = s.labelColor; ctx.font = font(F, 600); ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(s.label, (X(s.x0) + X(s.x1)) / 2, Tp + 8); } }
+    if (s.label) { ctx.font = font(F, 600); if (ctx.measureText(s.label).width + 6 > X(s.x1) - X(s.x0)) continue; ctx.fillStyle = s.labelColor; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(s.label, (X(s.x0) + X(s.x1)) / 2, Tp + 8); } }
   ctx.font = font(16, 500); ctx.textBaseline = "middle"; ctx.textAlign = "right";
   for (const v of o.yticks) { const y = Math.round(Y(v)) + .5; const zero = v === 0 && o.zeroStrong; ctx.strokeStyle = zero ? T.muted : hexA(T.muted, .55); ctx.lineWidth = zero ? 2 : 1.5; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + pw, y); ctx.stroke(); ctx.fillStyle = T.muted; ctx.fillText(o.yfmt ? o.yfmt(v) : String(v), L - 10, y); }
   for (const hl of o.hlines || []) { ctx.strokeStyle = T.faint; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(L, Y(hl.y) + .5); ctx.lineTo(L + pw, Y(hl.y) + .5); ctx.stroke(); ctx.setLineDash([]);
@@ -795,7 +851,8 @@ function attractorScene(id, task) {
           hlines: [{ y: 3, label: "random" }], rpad: 90, spans, series: [{ data: this.ser, n, dx: 100, color: T.ink, width: 2.5 }] }); }
     },
     draw3D(cv) {
-      const { ctx, w, h } = fit(cv), t = this.t;
+      const { ctx, w, h } = fit(cv), t = this.t, nar = w < 560, top0 = nar ? 34 : 0;
+      const keepIn = (txt, x) => Math.min(x, w - ctx.measureText(txt).width - 2);
       // axis ranges follow the 99th percentile of the visited states (so brief transients don't shrink everything), eased so they don't jump
       if (t > 1) { const i00 = Math.max(0, t - Math.min(t, this.cloud)), st = Math.max(1, Math.floor((t - i00) / 3000)), v = [], vx = [];
         for (let i = i00; i < t; i += st) { v.push(Math.max(Math.abs(this.WD[i]), Math.abs(this.XD[i]))); vx.push(this.X0[i]); }
@@ -808,9 +865,9 @@ function attractorScene(id, task) {
       const hp = this.HP[this.rule], tw = ctx.measureText(ttl).width; ctx.font = font(15, 500); ctx.fillStyle = T.muted;
       ctx.fillText(`α ${fmtP(hp.alpha)} · β ${fmtP(hp.beta)} · η ${fmtP(hp.eta)}` + (hp.tau ? ` · τ ${fmtP(hp.tau)}` : ""), tw + 14, 22);
       if (this.weak.includes(this.rule)) { ctx.font = font(14, 600); ctx.fillStyle = T.del; ctx.fillText("weak reward-seeker in the 3-neuron network", 0, 46); }
-      this.cartoon(ctx, w, t);
+      this.cartoon(ctx, w, t, top0);
       const cy0 = Math.cos(this.yaw), sy0 = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
-      const k = Math.max(40, Math.min((w - 150) / 1.5, (h - 200) / 1.45)), cx = w / 2, cyy = 150 + (h - 190) / 2;
+      const k = Math.max(40, Math.min((w - (nar ? 170 : 150)) / 1.5, (h - 200 - top0) / 1.45)), cx = w / 2 - (nar ? 8 : 0), cyy = nar ? 150 + top0 + (h - 210 - top0) / 2 : 150 + (h - 190) / 2;
       const nz = (v, r) => (v - r[0]) / (r[1] - r[0]) - .5;
       const P3 = (X, Y, Z) => { const xr = X * cy0 - Y * sy0, yr = X * sy0 + Y * cy0; return [cx + k * xr, cyy - k * (Z * cp + yr * sp)]; };
       const pt = (x, wd, xd) => P3(nz(x, R.x), nz(wd, R.w), nz(xd, R.z));
@@ -824,21 +881,22 @@ function attractorScene(id, task) {
       const z0 = nz(0, R.z), pl = [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]].map(([a, b]) => P3(a, b, z0));
       ctx.fillStyle = hexA(T.ink, .045); ctx.strokeStyle = hexA(T.ink, .18); ctx.beginPath(); pl.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill(); ctx.stroke();
       { const [lx, ly] = P3(.5, -.5, z0); ctx.font = font(15, 600); ctx.textAlign = "left"; ctx.textBaseline = "middle";
-        ctx.fillStyle = T.a; ctx.fillText("chooses a ↑", lx + 10, ly - 12); ctx.fillStyle = T.b; ctx.fillText("chooses b ↓", lx + 10, ly + 12); }
+        if (nar) ctx.font = font(13, 600);
+        ctx.fillStyle = T.a; ctx.fillText("chooses a ↑", keepIn("chooses a ↑", lx + 10), ly - 12); ctx.fillStyle = T.b; ctx.fillText("chooses b ↓", keepIn("chooses b ↓", lx + 10), ly + 12); }
       // fixed-point lines of the reduced PC system: s = 1 -> x_in = 1, X_diff = W_diff; s = 0 -> x_in = 0, X_diff = 0
       if (this.rule === "PC") {
         const FP = "#e8431f"; ctx.strokeStyle = FP; ctx.lineWidth = 3.5; ctx.lineCap = "round";
-        ctx.font = font(14, 600); ctx.fillStyle = FP; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.font = font(nar ? 13 : 14, 600); ctx.fillStyle = FP; ctx.textAlign = "left"; ctx.textBaseline = "middle";
         if (task === "det") {
           const L1 = [pt(1, R.w[0], R.w[0]), pt(1, R.w[1], R.w[1])], L0 = [pt(0, R.w[0], 0), pt(0, R.w[1], 0)];
           for (const [A, B] of [L1, L0]) { ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); } ctx.globalAlpha = 1;
-          { const [lx, ly] = pt(1, R.w[0] * .55, R.w[0] * .55); ctx.fillText("fixed points, s = 1", lx + 12, ly); }
+          { const [lx, ly] = pt(1, R.w[0] * .55, R.w[0] * .55); ctx.fillText("fixed points, s = 1", keepIn("fixed points, s = 1", lx + 12), ly); }
           { const [lx, ly] = pt(0, R.w[1] * .97, 0); ctx.textBaseline = "bottom"; ctx.fillText("fixed points, s = 0", lx + 4, ly - 8); ctx.textBaseline = "middle"; }
         } else {
           // both phases reward about half the choices, so on average x_in = 0.5 and the line is X_diff = 0.5 W_diff
           const sb = 0.5, wl = Math.min(R.w[1], R.z[1] / sb), L = [pt(sb, -wl, -sb * wl), pt(sb, wl, sb * wl)];
           ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]); ctx.lineTo(L[1][0], L[1][1]); ctx.stroke(); ctx.globalAlpha = 1;
-          { const [lx, ly] = pt(sb, -wl * .8, -sb * wl * .8); ctx.fillText("fixed points, mean s = 0.5", lx + 12, ly + 2); }
+          { const [lx, ly] = pt(sb, -wl * .8, -sb * wl * .8); ctx.fillText("fixed points, mean s = 0.5", keepIn("fixed points, mean s = 0.5", lx + 12), ly + 2); }
         }
       }
       // axes: name (with subscript) and range sit at each axis midpoint, pushed outward from the box centre
@@ -869,14 +927,20 @@ function attractorScene(id, task) {
       // legend
       ctx.font = font(14, 600); ctx.textAlign = "left"; ctx.textBaseline = "middle";
       const lg = task === "det" ? [[T.a, "● s = 1 (chose a)"], [T.b, "● s = 0 (chose b)"]] : [[AT_PHASE.computer, "● vs computer"], [AT_PHASE.coin, "● coin flip, p(reward) = 0.5"]];
-      ctx.fillStyle = lg[0][0]; ctx.fillText(lg[0][1], 0, h - 34); ctx.fillStyle = lg[1][0]; ctx.fillText(lg[1][1], 0, h - 12);
-      if (task === "mp") { ctx.font = font(13, 500); ctx.fillStyle = T.muted; ctx.fillText(`dots: last ${kfmt(this.cloud)} steps`, 0, h - 56); }
+      if (nar) {   // one line, so it stays clear of the axis labels
+        ctx.font = font(13, 600); ctx.fillStyle = lg[0][0]; ctx.fillText(lg[0][1], 0, h - 10);
+        const x2 = ctx.measureText(lg[0][1]).width + 14; ctx.fillStyle = lg[1][0]; ctx.fillText(task === "det" ? lg[1][1] : "● coin flip", x2, h - 10);
+        if (task === "mp") { ctx.font = font(13, 500); ctx.fillStyle = T.muted; ctx.textAlign = "right"; ctx.fillText(`dots: last ${kfmt(this.cloud)} steps`, w, h - 10); ctx.textAlign = "left"; }
+      } else {
+        ctx.fillStyle = lg[0][0]; ctx.fillText(lg[0][1], 0, h - 34); ctx.fillStyle = lg[1][0]; ctx.fillText(lg[1][1], 0, h - 12);
+        if (task === "mp") { ctx.font = font(13, 500); ctx.fillStyle = T.muted; ctx.fillText(`dots: last ${kfmt(this.cloud)} steps`, 0, h - 56); }
+      }
     },
     // network in miniature, top right: the 1-2 network and its loop through the world.
     // Node fill = activity, line width = weight, chosen output ringed; the loop is lit when the choice returned input.
-    cartoon(ctx, cw, t) {
+    cartoon(ctx, cw, t, oy = 0) {
       const net = this.net, i = t - 1, s = i >= 0 ? this.S[i] : 0, ch = i >= 0 ? this.A[i] : -1;
-      const RN = 13, xr = cw - 6, xo = xr - 118, xi = xo - 130, yc = 64, yA = 34, yB = 94, yl = 128;
+      const RN = 13, xr = cw - 6, xo = xr - 118, xi = xo - 130, yc = 64 + oy, yA = 34 + oy, yB = 94 + oy, yl = 128 + oy;
       const loopC = s ? T.a : hexA(T.ink, .18);
       for (const [k, y] of [[0, yA], [1, yB]]) { const wv = Math.max(0, net.W[0][k]), f = Math.min(1, wv / 1.5);
         ctx.strokeStyle = hexA(k ? T.b : T.a, .25 + .75 * f); ctx.lineWidth = 1 + 4 * f; ctx.lineCap = "round";
@@ -905,7 +969,7 @@ function attractorScene(id, task) {
     drawRaster(cv) {
       const { ctx, w, h } = fit(cv), t = this.t, n = 300, L = 58, Rp = 90, pw = w - L - Rp;
       ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.font = font(20, 600); ctx.fillStyle = T.ink; ctx.fillText("Choices", 0, 22);
-      const cw = ctx.measureText("Choices").width; ctx.font = font(15, 500); ctx.fillStyle = T.muted; ctx.fillText(`last ${n} steps`, cw + 14, 22);
+      const cw = ctx.measureText("Choices").width; ctx.font = font(15, 500); ctx.fillStyle = T.muted; if (!(task === "mp" && w < 560)) ctx.fillText(`last ${n} steps`, cw + 14, 22);
       if (task === "mp" && t > 0) { const ph = this.phase(t - 1); ctx.textAlign = "right"; ctx.font = font(16, 600); ctx.fillStyle = AT_PHASE[ph]; ctx.fillText(ph === "computer" ? "vs computer" : "coin flip", L + pw, 22); }
       const top = 50, rh = Math.min(46, (h - top - 30) / 2), y = [top, top + rh + 10];
       ctx.font = font(18, 600); ctx.textAlign = "right"; ctx.textBaseline = "middle";
@@ -921,6 +985,7 @@ function attractorScene(id, task) {
   cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener("pointermove", e => { if (!drag) return; S.yaw = drag.yaw + (e.clientX - drag.x) * .01; S.pitch = Math.max(-1.3, Math.min(1.3, drag.pitch + (e.clientY - drag.y) * .01)); dirty = true; });
   cv.addEventListener("pointerup", () => { drag = null; });
+  cv.addEventListener("pointercancel", () => { drag = null; });
   cv.addEventListener("dblclick", () => { S.yaw = 0.8; S.pitch = 0.25; dirty = true; });
   return S;
 }
@@ -1046,7 +1111,7 @@ const CL = {
   advance(n) { this.t = Math.min(this.T, this.t + n, this.sim); },
   draw() {
     const cur = Math.floor(Math.min(this.t, this.T - 1) / this.L), n = Math.floor(this.t / this.bin);
-    const xt = []; for (let b = 0; b <= this.NB; b += 2) xt.push(b * this.L);
+    const narrow = $("l-ch0").getBoundingClientRect().width < 560, xt = []; for (let b = 0; b <= this.NB; b += narrow ? this.NB : 2) xt.push(b * this.L);
     this.R.forEach((R, ri) => {
       const spans = []; for (let b = 0; b < this.NB; b++) spans.push({ x0: b * this.L, x1: (b + 1) * this.L, color: hexA(b % 2 ? T.b : T.a, b === cur && !this.done() ? .16 : .06), label: b % 2 ? "B" : "A", labelColor: b % 2 ? T.b : T.a });
       chart($("l-ch" + ri), { title: this.rules[ri].name, xmax: this.T, ymin: -R.scale * .3, ymax: R.scale, yticks: [0], yfmt: () => "0", zeroStrong: true, hlines: [], spans, xticks: xt, rpad: 120,
@@ -1162,10 +1227,11 @@ const PS = {
     const { ctx, w, h } = fit(cv), t = this.t, on = this.on, multi = this.multi();
     ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.font = font(20, 600); ctx.fillStyle = T.ink;
     ctx.fillText(!on.length ? "No rule ticked" : multi ? `${on.length} rules` : `${RULE_NAME[on[0]]} rule`, 0, 22);
-    if (multi) { let x = 0; ctx.font = font(15, 600); for (const r of on) { ctx.fillStyle = RULE_COLOR[r]; ctx.fillText(RULE_NAME[r], x, 46); x += ctx.measureText(RULE_NAME[r]).width + 14; } }
+    const nar = w < 560, ny = nar ? 78 : 46, top0 = nar && multi ? 34 : 0;   // narrow: rule names go below the cartoon
+    if (multi) { let x = 0; ctx.font = font(15, 600); for (const r of on) { ctx.fillStyle = RULE_COLOR[r]; ctx.fillText(RULE_NAME[r], x, ny); x += ctx.measureText(RULE_NAME[r]).width + 14; } }
     const sNow = t <= this.P.switchAt; this.cartoon(ctx, w, t, sNow);
     const cy0 = Math.cos(this.yaw), sy0 = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
-    const k = Math.max(40, Math.min((w - 90) / 1.45, (h - 110) / 1.6)), cx = w / 2, cyy = 70 + (h - 70) / 2;
+    const k = Math.max(40, Math.min((w - (nar ? 120 : 90)) / 1.45, (h - 110 - top0) / 1.6)), cx = w / 2, cyy = 70 + top0 + (h - 70 - top0) / 2;
     const n = (v, a) => (v - R[a][0]) / (R[a][1] - R[a][0]) - .5;
     const P3 = (X, Y, Z) => { const xr = X * cy0 - Y * sy0, yr = X * sy0 + Y * cy0; return [cx + k * xr, cyy - k * (Z * cp + yr * sp)]; };
     const pt = (o, i) => P3(n(o.X0[i], "x0"), n(o.W[i], "w"), n(o.X1[i], "x1"));
@@ -1257,6 +1323,7 @@ const PS = {
   cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: PS.yaw, pitch: PS.pitch }; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener("pointermove", e => { if (!drag) return; PS.yaw = drag.yaw + (e.clientX - drag.x) * .01; PS.pitch = Math.max(-1.3, Math.min(1.3, drag.pitch + (e.clientY - drag.y) * .01)); dirty = true; });
   cv.addEventListener("pointerup", () => { drag = null; });
+  cv.addEventListener("pointercancel", () => { drag = null; });
   cv.addEventListener("dblclick", () => { PS.yaw = 0.72; PS.pitch = 0.36; dirty = true; });
 })();
 // ticking a rule replays the run so the ticked rules animate together
