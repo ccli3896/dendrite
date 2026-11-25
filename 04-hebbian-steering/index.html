@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Live simulations: reward-seeking behavior emerging from local Hebbian-like plasticity.">
 <title>Hebbian steering</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: a portrait stage (about 3:4) centred on any screen; everything stacks in one column. Big title, one picture + one plot, almost no text.
+/* Layout: a 16:10 (laptop) stage centred on any screen; picture and plot sit side by side. Big title, one picture + one plot, almost no text.
    Colour: rose = reward / rewarded arm a, teal = arm b; green / amber only for added / removed neurons. */
 :root {
   --frame: #efeeea; --bg: #fcfcfa; --well: #f0f0ed; --line: #dcdfe3;
@@ -22,9 +23,9 @@
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { background: var(--frame); color: var(--ink); font-family: var(--font); margin: 0; display: flex; justify-content: center; height: 100%;
+body { background: var(--frame); color: var(--ink); font-family: var(--font); margin: 0; display: flex; justify-content: center; align-items: center; height: 100%;
   -webkit-font-smoothing: antialiased; }
-.stage { width: min(100%, max(75vh, 660px)); height: 100%; display: flex; flex-direction: column; background: var(--bg); container-type: inline-size;
+.stage { width: min(100vw, 160vh); height: min(100vh, 62.5vw); display: flex; flex-direction: column; background: var(--bg); container-type: inline-size;
   padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); padding-block: 16px 14px; }
 
 /* top bar: brand left, segmented tab control right */
@@ -44,8 +45,15 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 h1 { margin: 4px 0 0; font-size: 34px; font-weight: 600; letter-spacing: -.02em; line-height: 1.1; }
 
 main { flex: 1; display: flex; min-height: 0; padding-top: 18px; }
-.tab { flex: 1; display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, .85fr) minmax(0, 1fr); min-height: 0; }
-.tab.one { gap: 18px; grid-template-rows: 1fr 1fr; }
+.tab { flex: 1; display: grid; gap: 36px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 0; }
+.tab.one { gap: 36px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+#chks, #rchks { grid-column: 1 / -1; }
+#tab-reward, #tab-churn { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+#tab-reward { grid-template-rows: auto minmax(0, 1fr); row-gap: 16px; }
+.tab.att { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); row-gap: 14px; }
+.stack { display: grid; grid-template-rows: minmax(0, .8fr) minmax(0, 1fr); gap: 18px; min-height: 0; min-width: 0; }
+#ad-3d, #am-3d { cursor: grab; touch-action: none; } #ad-3d:active, #am-3d:active { cursor: grabbing; }
+nav.seg .grp-lab { align-self: center; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 0 4px 0 10px; margin-left: 4px; border-left: 1px solid var(--line); }
 .tab[hidden] { display: none !important; }
 .tab.cover { display: flex; align-items: center; justify-content: center; text-align: center; }
 .cover-in { width: 100%; margin-bottom: 10vh; }
@@ -81,6 +89,15 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
 #speedv { min-width: 30px; font-variant-numeric: tabular-nums; color: var(--ink); }
 .clock { font-variant-numeric: tabular-nums; margin-left: auto; color: var(--muted); }
 .opt[hidden] { display: none !important; }
+.chks { display: flex; flex-wrap: wrap; gap: 8px; }
+.chk { display: inline-flex; align-items: center; gap: 9px; height: 44px; padding: 0 18px 0 13px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg);
+  font-size: 18px; font-weight: 600; color: var(--c); cursor: pointer; user-select: none; }
+.chk input { accent-color: var(--c); margin: 0; width: 20px; height: 20px; cursor: pointer; }
+.chk:has(input:checked) { background: var(--well); border-color: var(--faint); }
+.chk:has(input:focus-visible) { outline: 2px solid var(--a); outline-offset: 2px; }
+.chk input:focus-visible { outline: none; }
+#p-traj { cursor: grab; touch-action: none; }
+#p-traj:active { cursor: grabbing; }
 @container (max-width: 740px) { .brand { display: none; } .topbar { justify-content: center; } }
 @container (max-width: 520px) { nav.seg a { padding: 6px 8px; } nav.seg a .n { display: none; } }
 </style>
@@ -92,10 +109,14 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
     <span class="brand"><i style="background:var(--a)"></i><i style="background:var(--b);margin-left:-4px"></i>Hebbian steering</span>
     <nav class="seg" aria-label="Animations">
       <a href="#intro" data-tab="intro">Title</a>
-      <a href="#reward" data-tab="reward"><span class="n">1</span>Reward</a>
-      <a href="#churn" data-tab="churn"><span class="n">2</span>Turnover</a>
-      <a href="#continual" data-tab="continual"><span class="n">3</span>Continual</a>
-      <a href="#openfield" data-tab="openfield"><span class="n">4</span>Open field</a>
+      <a href="#passive" data-tab="passive"><span class="n">1</span>Passive</a>
+      <a href="#reward" data-tab="reward"><span class="n">2</span>Reward</a>
+      <a href="#churn" data-tab="churn"><span class="n">3</span>Turnover</a>
+      <a href="#continual" data-tab="continual"><span class="n">4</span>Continual</a>
+      <a href="#openfield" data-tab="openfield"><span class="n">5</span>Open field</a>
+      <span class="grp-lab">Attractors</span>
+      <a href="#adet" data-tab="adet"><span class="n">6</span>Deterministic</a>
+      <a href="#amp" data-tab="amp"><span class="n">7</span>Matching pennies</a>
     </nav>
   </div>
   <div class="head"><div class="eyebrow" id="eyebrow">Demo 1 of 4</div><h1 id="title">Reward seeking</h1></div>
@@ -109,8 +130,31 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
       <p>Reward-seeking behavior emerges from local dynamics</p>
     </div>
   </section>
+  <section class="tab" id="tab-passive" data-title="Same input, different rules" hidden style="grid-template-rows:auto minmax(0,1fr);column-gap:36px;row-gap:16px"
+    data-info="2-neuron network (main Fig. 1a) · input s = 1 for 500 steps, then 0 · α 0.01, β 0.01, η 0.005, τ 0.01 (rules with running averages) · start x₀ 0, x₁ 1, w 0.75 · every rule gets the same noise · drag the 3D plot to rotate, double-click to reset">
+    <div class="chks" id="chks" role="group" aria-label="Rules to plot">
+      <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="checkbox" value="PC" checked>PC</label>
+      <label class="chk" style="--c:#c47f12" title="Bienenstock–Cooper–Munro"><input type="checkbox" value="BCM">BCM</label>
+      <label class="chk" style="--c:#3f9a2a" title="Oja's rule"><input type="checkbox" value="OJA">OJA</label>
+      <label class="chk" style="--c:#7e4bc2" title="Law &amp; Cooper"><input type="checkbox" value="LC">LC</label>
+      <label class="chk" style="--c:#d4572f" title="Covariance plasticity"><input type="checkbox" value="COV">COV</label>
+      <label class="chk" style="--c:#8a6a3a" title="Latent predictive learning"><input type="checkbox" value="LPL">LPL</label>
+      <label class="chk" style="--c:#191c21" title="RPE-gated Hebbian (three-factor)"><input type="checkbox" value="RPE">RPE</label>
+    </div>
+    <div class="cv"><canvas id="p-traj"></canvas></div>
+    <div class="cv"><canvas id="p-ts"></canvas></div>
+  </section>
   <section class="tab" id="tab-reward" data-title="Reward seeking"
-    data-info="PC rule · 1–50–2 network · α 0.0164, β 0.0072, η 0.01 · choosing a returns s = 1 to the input neuron, b returns 0 · curve: mean of 16 networks">
+    data-info="1–50–2 network, each rule at its large-network reward-seeking operating point (Supp. Table params; main Fig. 1f) · choosing a returns s = 1 to the input neuron, b returns 0 · curve: mean of 16 networks">
+    <div class="chks" id="rchks" role="radiogroup" aria-label="Learning rule">
+      <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="radio" autocomplete="off" name="rrule" value="PC" checked>PC</label>
+      <label class="chk" style="--c:#c47f12" title="Bienenstock–Cooper–Munro"><input type="radio" autocomplete="off" name="rrule" value="BCM">BCM</label>
+      <label class="chk" style="--c:#3f9a2a" title="Oja's rule"><input type="radio" autocomplete="off" name="rrule" value="OJA">OJA</label>
+      <label class="chk" style="--c:#7e4bc2" title="Law &amp; Cooper"><input type="radio" autocomplete="off" name="rrule" value="LC">LC</label>
+      <label class="chk" style="--c:#d4572f" title="Covariance plasticity"><input type="radio" autocomplete="off" name="rrule" value="COV">COV</label>
+      <label class="chk" style="--c:#8a6a3a" title="Latent predictive learning"><input type="radio" autocomplete="off" name="rrule" value="LPL">LPL</label>
+      <label class="chk" style="--c:#191c21" title="RPE-gated Hebbian (three-factor)"><input type="radio" autocomplete="off" name="rrule" value="RPE">RPE</label>
+    </div>
     <div class="cv"><canvas id="r-net"></canvas></div>
     <div class="cv"><canvas id="r-pc"></canvas></div>
   </section>
@@ -124,9 +168,37 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
     <div class="cv"><canvas id="l-ch0"></canvas></div>
     <div class="cv"><canvas id="l-ch1"></canvas></div>
   </section>
-  <section class="tab" id="tab-openfield" data-title="Open field" hidden style="grid-template-rows:minmax(0,1fr)"
+  <section class="tab" id="tab-openfield" data-title="Open field" hidden style="grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)"
     data-info="PaN model (Li et al. 2024) · tiny 1–4 network (no hidden layer) · α 0.01 · ω 0.1 · η_x 0.03 · η_W 1e-3 · 10 settling steps · round hills · input = change in height · rose trail = within 300 cells of a peak">
     <div class="cv"><canvas id="o-map"></canvas></div>
+  </section>
+  <section class="tab att" id="tab-adet" data-title="Deterministic task" hidden
+    data-info="1–2 network (main Fig. 1i,j) · PC: α 0.02, β 0.03, η 0.008, activities capped at 3 (Fig. 1j); other rules: parameters shown on the plot · choosing a returns s = 1, b returns 0 · red lines (PC only): fixed points · axes: input activity x_in, W_diff = w_a − w_b, X_diff = x_a − x_b · drag to rotate, double-click to reset">
+    <div class="chks" role="radiogroup" aria-label="Learning rule" style="grid-column:1/-1">
+      <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="radio" autocomplete="off" name="adrule" value="PC" checked>PC</label>
+      <label class="chk" style="--c:#c47f12" title="Bienenstock–Cooper–Munro"><input type="radio" autocomplete="off" name="adrule" value="BCM">BCM</label>
+      <label class="chk" style="--c:#3f9a2a" title="Oja's rule"><input type="radio" autocomplete="off" name="adrule" value="OJA">OJA</label>
+      <label class="chk" style="--c:#7e4bc2" title="Law &amp; Cooper"><input type="radio" autocomplete="off" name="adrule" value="LC">LC</label>
+      <label class="chk" style="--c:#d4572f" title="Covariance plasticity"><input type="radio" autocomplete="off" name="adrule" value="COV">COV</label>
+      <label class="chk" style="--c:#8a6a3a" title="Latent predictive learning"><input type="radio" autocomplete="off" name="adrule" value="LPL">LPL</label>
+      <label class="chk" style="--c:#191c21" title="RPE-gated Hebbian (three-factor)"><input type="radio" autocomplete="off" name="adrule" value="RPE">RPE</label>
+    </div>
+    <div class="cv"><canvas id="ad-3d"></canvas></div>
+    <div class="stack"><div class="cv"><canvas id="ad-raster"></canvas></div><div class="cv"><canvas id="ad-plot"></canvas></div></div>
+  </section>
+  <section class="tab att" id="tab-amp" data-title="Matching pennies" hidden
+    data-info="1–2 network, each rule at its Fig. 3h–k cell (OJA: sweep cell with a larger drop) · red line (PC only): fixed points for mean input s̄ = 0.5 (x_in = 0.5, X_diff = 0.5 W_diff) · alternating 20k-step phases: computer opponent (predicts the next choice from the last 3, z-test p &lt; 0.05; win when it guesses wrong) and coin flip (reward with p = 0.5) · network carried across phases · dots: last 6k steps · drag to rotate, double-click to reset">
+    <div class="chks" role="radiogroup" aria-label="Learning rule" style="grid-column:1/-1">
+      <label class="chk" style="--c:#2563c9" title="Prospective configuration"><input type="radio" autocomplete="off" name="amrule" value="PC" checked>PC</label>
+      <label class="chk" style="--c:#c47f12" title="Bienenstock–Cooper–Munro"><input type="radio" autocomplete="off" name="amrule" value="BCM">BCM</label>
+      <label class="chk" style="--c:#3f9a2a" title="Oja's rule"><input type="radio" autocomplete="off" name="amrule" value="OJA">OJA</label>
+      <label class="chk" style="--c:#7e4bc2" title="Law &amp; Cooper"><input type="radio" autocomplete="off" name="amrule" value="LC">LC</label>
+      <label class="chk" style="--c:#d4572f" title="Covariance plasticity"><input type="radio" autocomplete="off" name="amrule" value="COV">COV</label>
+      <label class="chk" style="--c:#8a6a3a" title="Latent predictive learning"><input type="radio" autocomplete="off" name="amrule" value="LPL">LPL</label>
+      <label class="chk" style="--c:#191c21" title="RPE-gated Hebbian (three-factor)"><input type="radio" autocomplete="off" name="amrule" value="RPE">RPE</label>
+    </div>
+    <div class="cv"><canvas id="am-3d"></canvas></div>
+    <div class="stack"><div class="cv"><canvas id="am-raster"></canvas></div><div class="cv"><canvas id="am-plot"></canvas></div></div>
   </section>
 </main>
 
@@ -196,6 +268,10 @@ class PCNet {
     for (let l = 0; l < sizes.length - 1; l++)
       this.W.push(Float64Array.from({ length: sizes[l] * sizes[l + 1] }, () => r.u() * s));
     this.pred = sizes.map(n => new Float64Array(n));
+    // running statistics per neuron (ssb states[0..2]): mean or mean square, variance, previous activity
+    this.sm = sizes.map(n => new Float64Array(n).fill(1));
+    this.sv = sizes.map(n => new Float64Array(n).fill(1));
+    this.sp = sizes.map(n => new Float64Array(n).fill(1));
   }
   // pred[l+1][k] = sum_i x[l][i] W[l][i,k]
   _pred() {
@@ -219,23 +295,47 @@ class PCNet {
       }
     }
     // (2) noise + relu
-    for (let l = 0; l < L; l++) { const x = this.x[l]; for (let i = 0; i < x.length; i++) { const v = x[i] + eta * r.n(); x[i] = v > 0 ? v : 0; } }
-    if (this.hp.rule === 'RPE') {
-      // HR / RPE rule (rules.update_weights_hrpe): W += beta*clip(x_i x_k * delta), delta = mean_input(s - x)
-      let d = 0; const x0 = this.x[0]; for (let i = 0; i < x0.length; i++) d += stim[i] - x0[i]; d /= x0.length;
-      for (let l = 0; l < L - 1; l++) {
-        const np_ = this.sizes[l], nq = this.sizes[l + 1], W = this.W[l], x = this.x[l], xq = this.x[l + 1];
-        for (let i = 0; i < np_; i++) { const o = i * nq; for (let k = 0; k < nq; k++) { const v = W[o + k] + beta * clip(x[i] * xq[k] * d, -10, 10); W[o + k] = v > 0 ? v : 0; } }
-      }
-      return;
-    }
-    // (3) PC weight update: W_ik += beta*clip(x_i * (x_k - pred_k), +-10), then relu
-    this._pred();
+    const cap = this.hp.cap || Infinity;   // optional activity cap (Fig. 1j uses 3)
+    for (let l = 0; l < L; l++) { const x = this.x[l]; for (let i = 0; i < x.length; i++) { const v = x[i] + eta * r.n(); x[i] = v > 0 ? (v < cap ? v : cap) : 0; } }
+    // (3) weight update, ssb/models/rules.py: W_ik += beta * clip(x_i * post_k, +-10) (COV: x pre-term and decay), then relu
+    const rule = this.hp.rule || 'PC', tau = this.hp.tau ?? 0.01;
+    if (rule === 'PC') this._pred();
+    let d = 0;
+    if (rule === 'RPE') { const x0 = this.x[0]; for (let i = 0; i < x0.length; i++) d += stim[i] - x0[i]; d /= x0.length; }
     for (let l = 0; l < L - 1; l++) {
       const np_ = this.sizes[l], nq = this.sizes[l + 1], W = this.W[l], x = this.x[l], xq = this.x[l + 1], p = this.pred[l + 1];
+      const mq = this.sm[l + 1], vq = this.sv[l + 1], pq = this.sp[l + 1], mi = this.sm[l];
+      const post = new Float64Array(nq);
+      for (let k = 0; k < nq; k++) {
+        const y = xq[k];
+        post[k] = rule === 'PC' ? y - p[k]
+          : rule === 'RPE' ? y * d
+          : rule === 'OJA' ? y                                        // minus W_ik y^2 below
+          : rule === 'BCM' ? y * (y - mq[k] * mq[k] / 0.1)
+          : rule === 'LC' ? y * (y - mq[k]) / (mq[k] + 1e-6)
+          : rule === 'LPL' ? (y - mq[k] + vq[k] * (pq[k] - y)) / (vq[k] + 1e-6)
+          : y;                                                        // COV: (x_i - mu_i) * y
+      }
       for (let i = 0; i < np_; i++) {
-        const xi = x[i], o = i * nq;
-        for (let k = 0; k < nq; k++) { const v = W[o + k] + beta * clip(xi * (xq[k] - p[k]), -10, 10); W[o + k] = v > 0 ? v : 0; }
+        const o = i * nq, pre = rule === 'COV' ? x[i] - mi[i] : x[i];
+        for (let k = 0; k < nq; k++) {
+          const w = W[o + k];
+          let g = pre * post[k], v;
+          if (rule === 'OJA') g -= w * xq[k] * xq[k];
+          if (rule === 'COV') v = w + beta * (clip(g, -10, 10) - Math.pow(w, 5));   // cap 1, rho 5
+          else v = w + beta * clip(g, -10, 10);
+          W[o + k] = v > 0 ? v : 0;
+        }
+      }
+    }
+    // (4) running statistics (rules.update_states_*), after the weight update
+    if (rule === 'PC' || rule === 'RPE' || rule === 'OJA') return;
+    for (let l = 0; l < L; l++) {
+      const x = this.x[l], m = this.sm[l], v = this.sv[l], pp = this.sp[l];
+      for (let i = 0; i < x.length; i++) {
+        if (rule === 'LC') { m[i] = (1 - tau) * m[i] + tau * x[i] * x[i]; continue; }
+        if (rule === 'LPL') { v[i] = (1 - tau) * v[i] + tau * (x[i] - m[i]) ** 2; pp[i] = x[i]; }
+        m[i] = (1 - tau) * m[i] + tau * x[i];
       }
     }
   }
@@ -251,6 +351,7 @@ class PCNet {
     this.W[h - 1] = Win; this.W[h] = Wout;
     this.x[h] = Float64Array.from(keep.map(j => this.x[h][j]));
     this.sizes[h] = nk; this.pred[h] = new Float64Array(nk);
+    for (const S of [this.sm, this.sv, this.sp]) S[h] = Float64Array.from(keep.map(j => S[h][j]));
   }
   addHidden(h, n, scale) {          // new neurons get random weights in [0, scale)
     const r = this.rng, old = this.sizes[h], nn = old + n, nIn = this.sizes[h - 1], nOut = this.sizes[h + 1];
@@ -260,6 +361,7 @@ class PCNet {
     this.W[h - 1] = Win; this.W[h] = Wout;
     const x = new Float64Array(nn); x.set(this.x[h]); this.x[h] = x;
     this.sizes[h] = nn; this.pred[h] = new Float64Array(nn);
+    for (const S of [this.sm, this.sv, this.sp]) { const a = new Float64Array(nn).fill(1); a.set(S[h]); S[h] = a; }
   }
 }
 
@@ -369,7 +471,41 @@ function fieldStep(ag, loc, land) {
   return { a, s };
 }
 
-if (typeof module !== 'undefined') module.exports = { RNG, PCNet, PaNAgent, detStep, clStep, fieldStep, LAND3, LANDSW, CONES3, CONESW, torusDist, argmaxTie };
+// ---------------------------------------------------------------------------
+// Passive 2-neuron network (main Fig. 1a-c), all seven rules (Methods 4.1-4.2).
+// x0 tracks the input s, x1 tracks w*x0, one plastic weight w. Per step: activity step,
+// noise + rectify, weight update from post-noise activities, then running averages.
+// Every rule draws the same noise sequence for a given seed.
+// ---------------------------------------------------------------------------
+const RULES = ["PC", "BCM", "OJA", "LC", "COV", "LPL", "RPE"];
+const RULE_NAME = { PC: "PC", BCM: "BCM", OJA: "OJA", LC: "LC", COV: "COV", LPL: "LPL", RPE: "RPE" };
+const RULE_COLOR = { PC: "#2563c9", BCM: "#c47f12", OJA: "#3f9a2a", LC: "#7e4bc2", COV: "#d4572f", LPL: "#8a6a3a", RPE: "#191c21" };
+function passiveRun(rule, seed, P) {
+  const { alpha, beta, eta, tau, T, switchAt, x0i, x1i, w0 } = P, r = RNG(seed);
+  let x0 = x0i, x1 = x1i, w = w0, mu = 1, th = 1, mu0 = 1, muL = 1, v2 = 1, prev = x1i;
+  const X0 = new Float32Array(T + 1), X1 = new Float32Array(T + 1), W = new Float32Array(T + 1), S = new Uint8Array(T + 1);
+  X0[0] = x0; X1[0] = x1; W[0] = w; S[0] = 1;
+  for (let t = 1; t <= T; t++) {
+    const s = t <= switchAt ? 1 : 0, p = w * x0;
+    x0 += 2 * alpha * clip(s - x0, -5, 5); x1 += 2 * alpha * clip(p - x1, -5, 5);
+    x0 = Math.max(0, x0 + eta * r.n()); x1 = Math.max(0, x1 + eta * r.n());
+    let d = 0, D = 0;
+    if (rule === "PC") d = x0 * (x1 - w * x0);
+    else if (rule === "OJA") d = x0 * x1 - w * x1 * x1;
+    else if (rule === "BCM") d = x0 * x1 * (x1 - mu * mu / 0.1);
+    else if (rule === "LC") d = x0 * x1 * (x1 - th) / (th + 1e-6);
+    else if (rule === "COV") { d = x1 * (x0 - mu0); D = Math.pow(w, 5); }
+    else if (rule === "LPL") d = x0 * ((x1 - muL) + v2 * (prev - x1)) / (v2 + 1e-6);
+    else if (rule === "RPE") d = x0 * x1 * (s - x0);
+    w = Math.max(0, w + beta * (clip(d, -10, 10) - D));
+    mu = (1 - tau) * mu + tau * x1; th = (1 - tau) * th + tau * x1 * x1; mu0 = (1 - tau) * mu0 + tau * x0;
+    const m = muL; muL = (1 - tau) * muL + tau * x1; v2 = (1 - tau) * v2 + tau * (x1 - m) ** 2; prev = x1;
+    X0[t] = x0; X1[t] = x1; W[t] = w; S[t] = s;
+  }
+  return { X0, X1, W, S };
+}
+
+if (typeof module !== 'undefined') module.exports = { RULES, passiveRun, RNG, PCNet, PaNAgent, detStep, clStep, fieldStep, LAND3, LANDSW, CONES3, CONESW, torusDist, argmaxTie };
 
 </script>
 <script>
@@ -377,7 +513,7 @@ if (typeof module !== 'undefined') module.exports = { RNG, PCNet, PaNAgent, detS
 const T = {};
 function readTokens() {
   const cs = getComputedStyle(document.documentElement);
-  for (const k of ["bg","ink","muted","faint","hair","a","b","add","del","land0","land1"]) T[k] = cs.getPropertyValue("--" + k).trim();
+  for (const k of ["bg","ink","muted","faint","hair","well","a","b","add","del","land0","land1"]) T[k] = cs.getPropertyValue("--" + k).trim();
   T.f = '"Instrument Sans", "Helvetica Neue", Arial, sans-serif'; T.ver = (T.ver || 0) + 1;
 }
 readTokens();
@@ -409,6 +545,7 @@ function chart(cv, o) {
   const X = x => L + (x / o.xmax) * pw, Y = y => Tp + (1 - (y - o.ymin) / (o.ymax - o.ymin)) * ph;
   ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.fillStyle = o.titleColor || T.ink; ctx.font = font(20, 600);
   ctx.fillText(o.title, 0, 22);
+  if (o.sub) { const tw = ctx.measureText(o.title).width; ctx.font = font(15, 500); ctx.fillStyle = T.muted; ctx.fillText(o.sub, tw + 14, 22); }
   if (o.stat) { ctx.textAlign = "right"; ctx.font = font(20, 500); ctx.fillStyle = o.statColor || T.muted; ctx.fillText(o.stat, w, 26); }
   for (const s of o.spans || []) { ctx.fillStyle = s.color; ctx.fillRect(X(s.x0), Tp, X(s.x1) - X(s.x0), ph);
     if (s.label) { ctx.fillStyle = s.labelColor; ctx.font = font(F, 600); ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(s.label, (X(s.x0) + X(s.x1)) / 2, Tp + 8); } }
@@ -450,11 +587,14 @@ function chart(cv, o) {
 function netView(net) { const W2 = net.W[1], H = net.sizes[1], sum = [0, 0]; for (let j = 0; j < H; j++) { sum[0] += W2[j * 2]; sum[1] += W2[j * 2 + 1]; } return { sum, H }; }
 function drawGridNet(cv, view, G, st, title, tag) {
   // Clean schematic: small nodes, hairline connectors, one thin feedback loop from arm a back to the input.
-  const { ctx, w, h } = fit(cv);
+  // Scaled up (nodes, labels, grid) when the panel is large, e.g. on a 16:10 laptop stage.
+  const { ctx, w: W0, h: H0 } = fit(cv);
+  const K = Math.max(1, Math.min(1.8, W0 / 470, H0 / 360)), w = W0 / K, h = H0 / K;
   const now = st.now ?? performance.now(), FADE = st.fade ?? 1600;
   const cols = G.cols, rows = Math.ceil(G.slots.length / cols);
   ctx.font = font(20, 600); ctx.fillStyle = T.ink; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillText(title, 0, 22);
-  if (tag) { const tw = ctx.measureText(title).width; ctx.fillStyle = tag.color; ctx.globalAlpha = tag.alpha; ctx.fillText(tag.text, tw + 14, 22); ctx.globalAlpha = 1; }
+  if (tag) { const tw = ctx.measureText(title).width; if (tag.font) ctx.font = tag.font; ctx.fillStyle = tag.color; ctx.globalAlpha = tag.alpha; ctx.fillText(tag.text, tw + 14, 22); ctx.globalAlpha = 1; }
+  ctx.scale(K, K);
   const top = 64, bot = h - 64, gx0 = w * .2, gx1 = w * .55;
   const cell = Math.min((gx1 - gx0) / cols, (bot - top) / rows, 30), gw = cell * cols, gh = cell * rows;
   const ox = (gx0 + gx1 - gw) / 2, oy = (top + bot - gh) / 2, cy = oy + gh / 2, r = cell * .24;
@@ -514,11 +654,23 @@ function smooth(st, r, net) {
 // Scene 1: reward seeking
 // ---------------------------------------------------------------------------
 const HP_L = { alpha: 0.0164, beta: 0.0072, eta: 0.01 };
+// Large-network (1-50-2) reward-seeking operating points, Supp. Table "Parameters by figure" (main Fig. 1e-g).
+const OP_L = {
+  PC:  { alpha: 0.0164,   beta: 0.0072,   eta: 1e-2 },
+  BCM: { alpha: 0.0848,   beta: 1,        eta: 1e-3, tau: 0.1 },
+  OJA: { alpha: 0.00139,  beta: 0.193,    eta: 1e-5 },
+  LC:  { alpha: 0.0072,   beta: 0.0848,   eta: 1e-4, tau: 0.1 },
+  COV: { alpha: 0.000611, beta: 0.00139,  eta: 1e-5, tau: 1e-3 },
+  LPL: { alpha: 0.000268, beta: 0.000611, eta: 1e-5, tau: 1e-3 },
+  RPE: { alpha: 5.18e-5,  beta: 0.193,    eta: 1e-5 },
+};
+const fmtP = v => v >= 0.001 ? String(+v.toPrecision(3)) : v.toExponential(2).replace(/\.?0+e/, "e").replace("e-", "e−");
 const REW = [1, 0];
 const RS = {
-  T: 100000, bin: 500, N: 16, rate: 5000,
+  T: 100000, bin: 500, N: 16, rate: 5000, rule: "PC",
   reset(seed) {
-    this.nets = Array.from({ length: this.N }, (_, k) => new PCNet([1, 50, 2], HP_L, seed * 131 + k));
+    const hp = Object.assign({ rule: this.rule }, OP_L[this.rule]);
+    this.nets = Array.from({ length: this.N }, (_, k) => new PCNet([1, 50, 2], hp, seed * 131 + k));
     this.grid = makeGrid(50, 10, 50, null); this.st = new Float64Array(1); this.t = 0; this.k = 0;
     this.acc = new Float64Array(this.N); this.mean = new Float64Array(this.T / this.bin); this.eS = .5; this.eA = .5; this.hx = new Float64Array(50);
   },
@@ -531,11 +683,239 @@ const RS = {
     }
   },
   draw() {
-    drawGridNet($("r-net"), netView(this.nets[0]), this.grid, this, "Network");
-    chart($("r-pc"), { title: "P(choose a)", xmax: this.T, ymin: 0, ymax: 1, yticks: [0, .5, 1], xticks: [0, 50000, 100000], hlines: [{ y: .5, label: "chance" }], rpad: 90,
-      series: [{ data: this.mean, n: this.k, dx: this.bin, color: T.a, width: 3.5 }] });
+    const op = OP_L[this.rule], ps = `α ${fmtP(op.alpha)} · β ${fmtP(op.beta)} · η ${fmtP(op.eta)}` + (op.tau ? ` · τ ${fmtP(op.tau)}` : "");
+    drawGridNet($("r-net"), netView(this.nets[0]), this.grid, this, `${RULE_NAME[this.rule]} rule`, { text: ps, color: T.muted, alpha: 1, font: font(15, 500) });
+    chart($("r-pc"), { title: "P(choose a)", sub: `mean of ${this.N} networks`, xmax: this.T, ymin: 0, ymax: 1, yticks: [0, .5, 1], xticks: [0, 50000, 100000], hlines: [{ y: .5, label: "chance" }], rpad: 90,
+      series: [{ data: this.mean, n: this.k, dx: this.bin, color: RULE_COLOR[this.rule], width: 3.5 }] });
   },
 };
+
+// ---------------------------------------------------------------------------
+// Scene: world-in-the-loop attractors (main Fig. 1i,j). 1-2 network; state (x_in, W_diff, X_diff).
+// ---------------------------------------------------------------------------
+const AT_PHASE = { computer: "#e39a1e", coin: "#508fcc" };   // Fig. 3k attractor colours (computer amber, p(reward) = 0.5 blue)
+// Matching-pennies computer opponent (ssb/envs/matchingpennies.py): looks up the agent's last 3 choices in a
+// 100-choice history, z-tests what followed them (p < 0.05) and predicts that; otherwise guesses at random.
+function MPOpp(seed) { this.h = new Float64Array(100); this.rng = RNG(seed); }
+MPOpp.prototype.reset = function () { this.h.fill(0); };
+MPOpp.prototype.push = function (a) { this.h.copyWithin(0, 1); this.h[99] = a; };
+MPOpp.prototype.predict = function () {
+  const h = this.h, n = 4, H = h.length; let c1 = 0, c0 = 0;
+  for (let i = 0; i < H - n; i++) { let m = true; for (let j = 0; j < n - 1; j++) if (h[i + j] !== h[H - (n - 1) + j]) { m = false; break; }
+    if (m) { if (h[i + n - 1] === 1) c1++; else c0++; } }
+  const tot = c1 + c0; let sig = false;
+  if (tot > 0) { const z = Math.abs(c1 - .5 * tot) / (Math.sqrt(tot * .25) + 1e-6), t = 1 / (1 + .2316419 * z), d = .3989423 * Math.exp(-z * z / 2);
+    const tail = d * t * (.3193815 + t * (-.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); sig = 2 * tail < 0.05; }
+  return sig ? (c1 > c0 ? 1 : 0) : (this.rng.u() < .5 ? 1 : 0);
+};
+function ent3(A, i0, i1) {   // 3-bit block entropy of choices A[i0..i1)
+  const c = [0, 0, 0, 0, 0, 0, 0, 0]; for (let i = i0 + 2; i < i1; i++) c[A[i - 2] * 4 + A[i - 1] * 2 + A[i]]++;
+  const n = i1 - i0 - 2; let H = 0; if (n <= 0) return 0; for (const k of c) if (k) H -= k / n * Math.log2(k / n); return H;
+}
+
+// World-in-the-loop attractor scene (main Fig. 1i,j and Fig. 3h-k). 1-2 network; state (x_in, W_diff, X_diff).
+// task "det": choosing a returns s = 1, b returns 0. task "mp": matching pennies, alternating 20k-step phases
+// against the computer opponent and a coin flip (p(reward) = 0.5), network carried across phases.
+function attractorScene(id, task) {
+  const S = {
+    id, task, rule: "PC", yaw: 0.8, pitch: 0.25, trail: 400,
+    T: task === "det" ? 40000 : 80000, rate: task === "det" ? 400 : 1000, phaseLen: 20000, win: task === "det" ? 500 : 300, cloud: task === "det" ? Infinity : 6000,
+    // det: PC = Fig. 1j full-environment panel; COV/LPL/RPE = high-scoring det-sweep cells with visible noise (eta 1e-3), all 20/20
+    // test seeds reach P(a) > 0.9 except LPL (19/20). BCM/OJA/LC: best cells found for the 3-neuron network; none
+    // reliably seeks reward here (late P(a) 0.64-0.73 vs ~0.6 with plasticity off), so they are flagged on the tab.
+    // mp: the Fig. 3h-k cells (Methods, costly stochasticity), except OJA, whose figure cell barely changes (0.1 bits);
+    // here OJA uses the sweep cell with the largest drop among those with side bias < 0.1 against the computer.
+    HP: task === "det" ? {
+      PC:  { alpha: 0.02,    beta: 0.03,   eta: 0.008, cap: 3 },
+      BCM: { alpha: 0.00139, beta: 0.0373, eta: 1e-5, tau: 0.00464 },
+      OJA: { alpha: 1,       beta: 1,      eta: 1e-5 },
+      LC:  { alpha: 0.00139, beta: 1,      eta: 1e-5, tau: 0.0215 },
+      COV: { alpha: 0.0848,  beta: 0.439,  eta: 1e-3, tau: 0.1 },
+      LPL: { alpha: 0.0848,  beta: 0.0164, eta: 1e-3, tau: 1e-3 },
+      RPE: { alpha: 0.0848,  beta: 0.439,  eta: 1e-3 },
+    } : {
+      PC:  { alpha: 0.0164,  beta: 0.439,   eta: 1e-3 },
+      BCM: { alpha: 0.0373,  beta: 1,       eta: 1e-4, tau: 1e-3 },
+      OJA: { alpha: 0.00316, beta: 5.18e-5, eta: 1e-2 },
+      LC:  { alpha: 0.439,   beta: 0.0848,  eta: 1e-6, tau: 0.0215 },
+      COV: { alpha: 0.00316, beta: 0.0373,  eta: 1e-6, tau: 1e-3 },
+      LPL: { alpha: 1,       beta: 1,       eta: 0.1,  tau: 0.1 },
+      RPE: { alpha: 0.0848,  beta: 1,       eta: 1e-6 },
+    },
+    weak: task === "det" ? ["BCM", "OJA", "LC"] : [],
+    xr: task === "det" ? 1.5 : 1.2, mmin: task === "det" ? 0.9 : 0.5,   // smallest W_diff / X_diff half-range shown
+    phase(t) { return task === "det" ? "det" : (Math.floor(t / this.phaseLen) % 2 ? "coin" : "computer"); },
+    reset(seed) {
+      this.net = new PCNet([1, 2], Object.assign({ rule: this.rule }, this.HP[this.rule]), seed * 131 + 7);
+      this.opp = new MPOpp(seed * 977 + 3); this.envRng = RNG(seed * 613 + 11);
+      const T = this.T; this.st = new Float64Array(1);
+      this.X0 = new Float32Array(T); this.WD = new Float32Array(T); this.XD = new Float32Array(T); this.A = new Uint8Array(T); this.S = new Uint8Array(T);
+      this.cum = new Float64Array(T + 1); this.ser = new Float64Array(Math.ceil(T / 100)); this.t = 0; this.rm = 0; this.rx = 0;
+    },
+    done() { return this.t >= this.T; },
+    advance(n) {
+      const net = this.net;
+      for (let k = 0; k < n && this.t < this.T; k++) {
+        const t = this.t; let a, s;
+        if (task === "det") ({ a, s } = detStep(net, [1, 0], this.st));
+        else {
+          if (t % this.phaseLen === 0) this.opp.reset();                     // opponent history restarts each phase
+          a = argmaxTie(net.out(), net.rng);
+          s = this.phase(t) === "computer" ? (a !== this.opp.predict() ? 1 : 0) : (this.envRng.u() < .5 ? 1 : 0);
+          this.opp.push(a); this.st[0] = s; net.step(this.st);
+        }
+        this.X0[t] = net.x[0][0]; this.WD[t] = net.W[0][0] - net.W[0][1]; this.XD[t] = net.x[1][0] - net.x[1][1];
+        this.A[t] = a; this.S[t] = s; this.cum[t + 1] = this.cum[t] + (a === 0); this.t++;
+        if (this.t % 100 === 0) { const i = this.t / 100 - 1, lo = Math.max(0, this.t - this.win);
+          this.ser[i] = task === "det" ? (this.cum[this.t] - this.cum[lo]) / (this.t - lo) : ent3(this.A, lo, this.t); }
+      }
+    },
+    draw() {
+      this.draw3D($(id + "-3d")); this.drawRaster($(id + "-raster"));
+      const n = Math.floor(this.t / 100);
+      if (task === "det") chart($(id + "-plot"), { title: "P(choose a)", sub: `${this.win}-step window`, xmax: this.T, ymin: 0, ymax: 1, yticks: [0, .5, 1], xticks: [0, this.T / 2, this.T],
+        hlines: [{ y: .5, label: "chance" }], rpad: 90, series: [{ data: this.ser, n, dx: 100, color: T.a, width: 3 }] });
+      else { const spans = []; for (let p = 0; p * this.phaseLen < this.T; p++) { const c = p % 2 ? AT_PHASE.coin : AT_PHASE.computer;
+          spans.push({ x0: p * this.phaseLen, x1: (p + 1) * this.phaseLen, color: hexA(c, .1), label: p % 2 ? "coin flip" : "computer", labelColor: c }); }
+        chart($(id + "-plot"), { title: "Choice entropy", sub: `3-bit, ${this.win}-step window`, xmax: this.T, ymin: 0, ymax: 3, yticks: [0, 1, 2, 3], xticks: [0, this.T / 2, this.T],
+          hlines: [{ y: 3, label: "random" }], rpad: 90, spans, series: [{ data: this.ser, n, dx: 100, color: T.ink, width: 2.5 }] }); }
+    },
+    draw3D(cv) {
+      const { ctx, w, h } = fit(cv), t = this.t;
+      // axis ranges follow the 99th percentile of the visited states (so brief transients don't shrink everything), eased so they don't jump
+      if (t > 1) { const i00 = Math.max(0, t - Math.min(t, this.cloud)), st = Math.max(1, Math.floor((t - i00) / 3000)), v = [], vx = [];
+        for (let i = i00; i < t; i += st) { v.push(Math.max(Math.abs(this.WD[i]), Math.abs(this.XD[i]))); vx.push(this.X0[i]); }
+        v.sort((p, q) => p - q); vx.sort((p, q) => p - q);
+        const tm = v[Math.floor(.99 * (v.length - 1))] * 1.15, tx = vx[Math.floor(.99 * (vx.length - 1))] * 1.1;
+        this.rm = this.rm ? (tm > this.rm ? tm : this.rm * .97 + tm * .03) : tm; this.rx = this.rx ? (tx > this.rx ? tx : this.rx * .97 + tx * .03) : tx; }
+      const isPC = this.rule === "PC", nice = v => { const e = 10 ** Math.floor(Math.log10(v)); return Math.ceil(v / e * 2) / 2 * e; };
+      const m = nice(Math.max(isPC ? this.mmin : 0.02, this.rm || 0)), R = { x: [0, nice(Math.max(isPC ? this.xr : 0.2, this.rx || 0))], w: [-m, m], z: [-m, m] };
+      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.font = font(20, 600); ctx.fillStyle = T.ink; const ttl = `${RULE_NAME[this.rule]} rule`; ctx.fillText(ttl, 0, 22);
+      const hp = this.HP[this.rule], tw = ctx.measureText(ttl).width; ctx.font = font(15, 500); ctx.fillStyle = T.muted;
+      ctx.fillText(`α ${fmtP(hp.alpha)} · β ${fmtP(hp.beta)} · η ${fmtP(hp.eta)}` + (hp.tau ? ` · τ ${fmtP(hp.tau)}` : ""), tw + 14, 22);
+      if (this.weak.includes(this.rule)) { ctx.font = font(14, 600); ctx.fillStyle = T.del; ctx.fillText("weak reward-seeker in the 3-neuron network", 0, 46); }
+      this.cartoon(ctx, w, t);
+      const cy0 = Math.cos(this.yaw), sy0 = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
+      const k = Math.max(40, Math.min((w - 150) / 1.5, (h - 200) / 1.45)), cx = w / 2, cyy = 150 + (h - 190) / 2;
+      const nz = (v, r) => (v - r[0]) / (r[1] - r[0]) - .5;
+      const P3 = (X, Y, Z) => { const xr = X * cy0 - Y * sy0, yr = X * sy0 + Y * cy0; return [cx + k * xr, cyy - k * (Z * cp + yr * sp)]; };
+      const pt = (x, wd, xd) => P3(nz(x, R.x), nz(wd, R.w), nz(xd, R.z));
+      const inBox = i => this.X0[i] <= R.x[1] && Math.abs(this.WD[i]) <= m && Math.abs(this.XD[i]) <= m;
+      const colOf = i => task === "det" ? (this.S[i] ? T.a : T.b) : AT_PHASE[this.phase(i)];
+      // box
+      ctx.strokeStyle = hexA(T.ink, .12); ctx.lineWidth = 1; const c = [-.5, .5], E = [];
+      for (const a of c) for (const b of c) E.push([[-.5, a, b], [.5, a, b]], [[a, -.5, b], [a, .5, b]], [[a, b, -.5], [a, b, .5]]);
+      for (const [p, q] of E) { const A = P3(...p), B = P3(...q); ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); }
+      // decision plane X_diff = 0: above -> a is chosen, below -> b
+      const z0 = nz(0, R.z), pl = [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]].map(([a, b]) => P3(a, b, z0));
+      ctx.fillStyle = hexA(T.ink, .045); ctx.strokeStyle = hexA(T.ink, .18); ctx.beginPath(); pl.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fill(); ctx.stroke();
+      { const [lx, ly] = P3(.5, -.5, z0); ctx.font = font(15, 600); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.fillStyle = T.a; ctx.fillText("chooses a ↑", lx + 10, ly - 12); ctx.fillStyle = T.b; ctx.fillText("chooses b ↓", lx + 10, ly + 12); }
+      // fixed-point lines of the reduced PC system: s = 1 -> x_in = 1, X_diff = W_diff; s = 0 -> x_in = 0, X_diff = 0
+      if (this.rule === "PC") {
+        const FP = "#e8431f"; ctx.strokeStyle = FP; ctx.lineWidth = 3.5; ctx.lineCap = "round";
+        ctx.font = font(14, 600); ctx.fillStyle = FP; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        if (task === "det") {
+          const L1 = [pt(1, R.w[0], R.w[0]), pt(1, R.w[1], R.w[1])], L0 = [pt(0, R.w[0], 0), pt(0, R.w[1], 0)];
+          for (const [A, B] of [L1, L0]) { ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); } ctx.globalAlpha = 1;
+          { const [lx, ly] = pt(1, R.w[0] * .55, R.w[0] * .55); ctx.fillText("fixed points, s = 1", lx + 12, ly); }
+          { const [lx, ly] = pt(0, R.w[1] * .97, 0); ctx.textBaseline = "bottom"; ctx.fillText("fixed points, s = 0", lx + 4, ly - 8); ctx.textBaseline = "middle"; }
+        } else {
+          // both phases reward about half the choices, so on average x_in = 0.5 and the line is X_diff = 0.5 W_diff
+          const sb = 0.5, wl = Math.min(R.w[1], R.z[1] / sb), L = [pt(sb, -wl, -sb * wl), pt(sb, wl, sb * wl)];
+          ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(L[0][0], L[0][1]); ctx.lineTo(L[1][0], L[1][1]); ctx.stroke(); ctx.globalAlpha = 1;
+          { const [lx, ly] = pt(sb, -wl * .8, -sb * wl * .8); ctx.fillText("fixed points, mean s = 0.5", lx + 12, ly + 2); }
+        }
+      }
+      // axes: name (with subscript) and range sit at each axis midpoint, pushed outward from the box centre
+      const AX = [[["x", "in"], [-.5, -.5, -.5], [.5, -.5, -.5], R.x], [["W", "diff"], [-.5, -.5, -.5], [-.5, .5, -.5], R.w], [["X", "diff"], [-.5, .5, -.5], [-.5, .5, .5], R.z]];
+      const C0 = P3(0, 0, 0); ctx.lineWidth = 1.5;
+      for (const [[nm, sub], a0, a1, rg] of AX) {
+        const A = P3(...a0), B = P3(...a1); ctx.strokeStyle = hexA(T.ink, .45); ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke();
+        const M = P3(...a0.map((v, q) => (v + a1[q]) / 2)); let dx = M[0] - C0[0], dy = M[1] - C0[1]; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+        ctx.font = font(18, 600); const w1 = ctx.measureText(nm).width; ctx.font = font(13, 600); const w2 = ctx.measureText(sub).width;
+        const tw2 = w1 + w2 + 1, push = 22 + Math.abs(dx) * (tw2 / 2 + 4), lx = M[0] + dx * push, ly = M[1] + dy * (push + 4);
+        ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillStyle = T.ink; ctx.font = font(18, 600); ctx.fillText(nm, lx - tw2 / 2, ly - 6);
+        ctx.font = font(13, 600); ctx.fillText(sub, lx - tw2 / 2 + w1 + 1, ly - 1);
+        ctx.font = font(13, 500); ctx.fillStyle = T.muted; ctx.textAlign = "center"; ctx.fillText(`${+rg[0].toFixed(2)} to ${+rg[1].toFixed(2)}`, lx, ly + 13);
+      }
+      // occupancy: visited states (det: whole run; mp: the last few thousand steps), thinned
+      const i00 = Math.max(0, t - this.cloud), stride = Math.max(1, Math.ceil((t - i00) / 9000));
+      for (let i = i00; i < t; i += stride) { if (!inBox(i)) continue; const [x, y] = pt(this.X0[i], this.WD[i], this.XD[i]); ctx.fillStyle = hexA(colOf(i), .16); ctx.fillRect(x - 1.2, y - 1.2, 2.4, 2.4); }
+      // recent trail, fading
+      // (as a line when the state moves smoothly; as dots when single steps jump far, e.g. fast activity rates, which would scribble)
+      const i0 = Math.max(1, t - this.trail); ctx.lineWidth = 2.2; ctx.lineCap = "round";
+      let seg = 0; for (let i = i0; i < t; i++) { const A = pt(this.X0[i - 1], this.WD[i - 1], this.XD[i - 1]), B = pt(this.X0[i], this.WD[i], this.XD[i]); seg += Math.hypot(B[0] - A[0], B[1] - A[1]); }
+      const asDots = t - i0 > 0 && seg / (t - i0) > 6;
+      for (let i = i0; i < t; i++) { const B = pt(this.X0[i], this.WD[i], this.XD[i]), al = .15 + .85 * (i - i0) / this.trail;
+        if (asDots) { if (!inBox(i)) continue; ctx.fillStyle = hexA(colOf(i), al * .8); ctx.beginPath(); ctx.arc(B[0], B[1], 2.6, 0, 7); ctx.fill(); continue; }
+        const A = pt(this.X0[i - 1], this.WD[i - 1], this.XD[i - 1]); ctx.strokeStyle = hexA(colOf(i), al); ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); }
+      if (t > 0) { const [x, y] = pt(this.X0[t - 1], this.WD[t - 1], this.XD[t - 1]); ctx.fillStyle = colOf(t - 1); ctx.strokeStyle = T.bg; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.stroke(); ctx.fill(); }
+      // legend
+      ctx.font = font(14, 600); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      const lg = task === "det" ? [[T.a, "● s = 1 (chose a)"], [T.b, "● s = 0 (chose b)"]] : [[AT_PHASE.computer, "● vs computer"], [AT_PHASE.coin, "● coin flip, p(reward) = 0.5"]];
+      ctx.fillStyle = lg[0][0]; ctx.fillText(lg[0][1], 0, h - 34); ctx.fillStyle = lg[1][0]; ctx.fillText(lg[1][1], 0, h - 12);
+      if (task === "mp") { ctx.font = font(13, 500); ctx.fillStyle = T.muted; ctx.fillText(`dots: last ${kfmt(this.cloud)} steps`, 0, h - 56); }
+    },
+    // network in miniature, top right: the 1-2 network and its loop through the world.
+    // Node fill = activity, line width = weight, chosen output ringed; the loop is lit when the choice returned input.
+    cartoon(ctx, cw, t) {
+      const net = this.net, i = t - 1, s = i >= 0 ? this.S[i] : 0, ch = i >= 0 ? this.A[i] : -1;
+      const RN = 13, xr = cw - 6, xo = xr - 118, xi = xo - 130, yc = 64, yA = 34, yB = 94, yl = 128;
+      const loopC = s ? T.a : hexA(T.ink, .18);
+      for (const [k, y] of [[0, yA], [1, yB]]) { const wv = Math.max(0, net.W[0][k]), f = Math.min(1, wv / 1.5);
+        ctx.strokeStyle = hexA(k ? T.b : T.a, .25 + .75 * f); ctx.lineWidth = 1 + 4 * f; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(xi + RN + 4, yc); ctx.lineTo(xo - RN - 4, y); ctx.stroke(); }
+      ctx.strokeStyle = loopC; ctx.lineWidth = 1.8; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      const xlr = xr - 4, xll = xi - 46, x0l = task === "det" ? xo + 98 : xo + 40;
+      ctx.beginPath(); ctx.moveTo(x0l, yA); ctx.lineTo(xlr - 10, yA); ctx.quadraticCurveTo(xlr, yA, xlr, yA + 10); ctx.lineTo(xlr, yl - 10); ctx.quadraticCurveTo(xlr, yl, xlr - 10, yl);
+      ctx.lineTo(xll + 10, yl); ctx.quadraticCurveTo(xll, yl, xll, yl - 10); ctx.lineTo(xll, yc + 10); ctx.quadraticCurveTo(xll, yc, xll + 10, yc); ctx.lineTo(xi - RN - 6, yc); ctx.stroke();
+      if (task === "mp") { ctx.beginPath(); ctx.moveTo(x0l, yB); ctx.lineTo(xlr - 10, yB); ctx.quadraticCurveTo(xlr, yB, xlr, yB + 10); ctx.stroke(); }
+      ctx.fillStyle = loopC; ctx.beginPath(); ctx.moveTo(xi - RN - 3, yc); ctx.lineTo(xi - RN - 11, yc - 5); ctx.lineTo(xi - RN - 11, yc + 5); ctx.closePath(); ctx.fill();
+      { const lx = (xll + xlr) / 2, lbl = task === "det" ? `input s = ${s}` : `${this.phase(Math.max(0, i)) === "computer" ? "computer" : "coin flip"}: s = ${s}`;
+        ctx.font = font(15, 600); const lw = ctx.measureText(lbl).width + 16;
+        ctx.fillStyle = T.bg; ctx.fillRect(lx - lw / 2, yl - 10, lw, 20); ctx.fillStyle = task === "det" ? (s ? T.a : T.muted) : AT_PHASE[this.phase(Math.max(0, i))];
+        ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(lbl, lx, yl + 1); }
+      const node = (x, y, v, col, on) => { ctx.fillStyle = mix(T.bg, col, .08 + .85 * Math.min(1, Math.max(0, v)));
+        if (on) { ctx.strokeStyle = hexA(col, .35); ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(x, y, RN + 3, 0, 7); ctx.stroke(); }
+        ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(x, y, RN, 0, 7); ctx.fill(); ctx.stroke(); };
+      node(xi, yc, net.x[0][0], T.ink, false); node(xo, yA, net.x[1][0], T.a, ch === 0); node(xo, yB, net.x[1][1], T.b, ch === 1);
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.font = font(18, 600); ctx.fillStyle = T.a; ctx.fillText("a", xo + RN + 10, yA + 1); ctx.fillStyle = T.b; ctx.fillText("b", xo + RN + 10, yB + 1);
+      if (task === "det") { ctx.font = font(14, 500); ctx.fillStyle = T.muted; ctx.fillText("→ s = 1", xo + RN + 26, yA + 1); ctx.fillText("→ s = 0", xo + RN + 26, yB + 1); }
+      ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.font = font(14, 600); ctx.fillStyle = T.ink; ctx.fillText("x", xi - 3, yc + RN + 5);
+      ctx.font = font(11, 600); ctx.fillText("in", xi + 6, yc + RN + 11);
+    },
+    // last few hundred choices as ticks: a on top row, b on the bottom row
+    drawRaster(cv) {
+      const { ctx, w, h } = fit(cv), t = this.t, n = 300, L = 58, Rp = 90, pw = w - L - Rp;
+      ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.font = font(20, 600); ctx.fillStyle = T.ink; ctx.fillText("Choices", 0, 22);
+      const cw = ctx.measureText("Choices").width; ctx.font = font(15, 500); ctx.fillStyle = T.muted; ctx.fillText(`last ${n} steps`, cw + 14, 22);
+      if (task === "mp" && t > 0) { const ph = this.phase(t - 1); ctx.textAlign = "right"; ctx.font = font(16, 600); ctx.fillStyle = AT_PHASE[ph]; ctx.fillText(ph === "computer" ? "vs computer" : "coin flip", L + pw, 22); }
+      const top = 50, rh = Math.min(46, (h - top - 30) / 2), y = [top, top + rh + 10];
+      ctx.font = font(18, 600); ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillStyle = T.a; ctx.fillText("a", L - 14, y[0] + rh / 2); ctx.fillStyle = T.b; ctx.fillText("b", L - 14, y[1] + rh / 2);
+      ctx.fillStyle = T.well; ctx.fillRect(L, y[0], pw, rh); ctx.fillRect(L, y[1], pw, rh);
+      const bw = pw / n;
+      for (let j = 0; j < n; j++) { const i = t - n + j; if (i < 0) continue; const a = this.A[i]; ctx.fillStyle = a ? T.b : T.a; ctx.fillRect(L + j * bw, y[a], Math.max(1, bw - .3), rh); }
+      if (t > 0) { const lo = Math.max(0, t - n), f = (this.cum[t] - this.cum[lo]) / (t - lo); ctx.textAlign = "left"; ctx.font = font(16, 600); ctx.fillStyle = T.muted;
+        ctx.fillText(`${Math.round(f * 100)}% a`, L + pw + 12, y[0] + rh / 2); if (task === "mp" && t - lo > 2) ctx.fillText(`${ent3(this.A, lo, t).toFixed(2)} bits`, L + pw + 12, y[1] + rh / 2); }
+    },
+  };
+  const cv = $(id + "-3d"); let drag = null;
+  cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => { if (!drag) return; S.yaw = drag.yaw + (e.clientX - drag.x) * .01; S.pitch = Math.max(-1.3, Math.min(1.3, drag.pitch + (e.clientY - drag.y) * .01)); dirty = true; });
+  cv.addEventListener("pointerup", () => { drag = null; });
+  cv.addEventListener("dblclick", () => { S.yaw = 0.8; S.pitch = 0.25; dirty = true; });
+  return S;
+}
+const AD = attractorScene("ad", "det"), AM = attractorScene("am", "mp");
+for (const [S, nm, key] of [[AD, "adrule", "adet"], [AM, "amrule", "amp"]])
+  document.querySelectorAll(`input[name=${nm}]`).forEach(i => i.addEventListener("change", () => {
+    S.rule = i.value; S.reset(seeds[key]); started[key] = true; dirty = true;
+    if (cur === key) { playing = true; $("play").textContent = "Pause"; }
+  }));
 
 // ---------------------------------------------------------------------------
 // Scene 2: neuron turnover
@@ -744,17 +1124,150 @@ const OF = {
 };
 
 // ---------------------------------------------------------------------------
+// Scene 0: passive input; tick rules to overlay them
+// ---------------------------------------------------------------------------
+const PS = {
+  T: 1000, rate: 100, on: ["PC"], yaw: 0.72, pitch: 0.36,
+  P: { alpha: 0.01, beta: 0.01, eta: 0.005, tau: 0.01, T: 1000, switchAt: 500, x0i: 0, x1i: 1, w0: 0.75 },
+  reset(seed) { this.runs = {}; for (const r of RULES) this.runs[r] = passiveRun(r, seed, this.P); this.t = 0; },
+  done() { return this.t >= this.T; },
+  advance(n) { this.t = Math.min(this.T, this.t + n); },
+  multi() { return this.on.length > 1; },
+  // Axes: fitted to one rule, or shared (from 0) when several are ticked.
+  ranges() {
+    const rules = this.on.length ? this.on : RULES, R = { x0: [1e9, -1e9], w: [1e9, -1e9], x1: [1e9, -1e9] };
+    for (const k of rules) { const o = this.runs[k];
+      for (let i = 0; i <= this.T; i++) { const v = { x0: o.X0[i], w: o.W[i], x1: o.X1[i] };
+        for (const a in R) { if (v[a] < R[a][0]) R[a][0] = v[a]; if (v[a] > R[a][1]) R[a][1] = v[a]; } } }
+    for (const a in R) { let [lo, hi] = R[a]; if (this.on.length !== 1 || a !== "w") lo = 0;
+      const pad = Math.max(.02, (hi - lo) * .08); R[a] = [Math.max(0, lo - (lo > 0 ? pad : 0)), hi + pad]; }
+    return R;
+  },
+  draw() { const R = this.ranges(); this.draw3D($("p-traj"), R); this.drawSeries($("p-ts"), R); },
+  draw3D(cv, R) {
+    const { ctx, w, h } = fit(cv), t = this.t, on = this.on, multi = this.multi();
+    ctx.textBaseline = "alphabetic"; ctx.textAlign = "left"; ctx.font = font(20, 600); ctx.fillStyle = T.ink;
+    ctx.fillText(!on.length ? "No rule ticked" : multi ? `${on.length} rules` : `${RULE_NAME[on[0]]} rule`, 0, 22);
+    if (multi) { let x = 0; ctx.font = font(15, 600); for (const r of on) { ctx.fillStyle = RULE_COLOR[r]; ctx.fillText(RULE_NAME[r], x, 46); x += ctx.measureText(RULE_NAME[r]).width + 14; } }
+    const sNow = t <= this.P.switchAt; this.cartoon(ctx, w, t, sNow);
+    const cy0 = Math.cos(this.yaw), sy0 = Math.sin(this.yaw), cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
+    const k = Math.max(40, Math.min((w - 90) / 1.45, (h - 110) / 1.6)), cx = w / 2, cyy = 70 + (h - 70) / 2;
+    const n = (v, a) => (v - R[a][0]) / (R[a][1] - R[a][0]) - .5;
+    const P3 = (X, Y, Z) => { const xr = X * cy0 - Y * sy0, yr = X * sy0 + Y * cy0; return [cx + k * xr, cyy - k * (Z * cp + yr * sp)]; };
+    const pt = (o, i) => P3(n(o.X0[i], "x0"), n(o.W[i], "w"), n(o.X1[i], "x1"));
+    const floor = (o, i) => P3(n(o.X0[i], "x0"), n(o.W[i], "w"), -.5);
+    // box
+    ctx.strokeStyle = hexA(T.ink, .12); ctx.lineWidth = 1;
+    const c = [-.5, .5], E = [];
+    for (const a of c) for (const b of c) E.push([[-.5, a, b], [.5, a, b]], [[a, -.5, b], [a, .5, b]], [[a, b, -.5], [a, b, .5]]);
+    for (const [p, q] of E) { const A = P3(...p), B = P3(...q); ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); }
+    // gray shadow of each trajectory on the floor of the box
+    ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.strokeStyle = hexA(T.ink, .14); ctx.lineWidth = 2.5;
+    for (const r of on) { const o = this.runs[r]; ctx.beginPath();
+      for (let i = 0; i <= t; i++) { const [x, y] = floor(o, i); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); }
+    // axes: x0 and w from the front corner, x1 up the right edge
+    const AX = [["x₀", "x0", [-.5, -.5, -.5], [.5, -.5, -.5]], ["w", "w", [-.5, -.5, -.5], [-.5, .5, -.5]], ["x₁", "x1", [.5, -.5, -.5], [.5, -.5, .5]]];
+    const f2 = v => (Math.abs(v) < 10 ? v.toFixed(2) : v.toFixed(0));
+    ctx.lineWidth = 1.5;
+    for (const [lab, a, start, end] of AX) {
+      const A = P3(...start), B = P3(...end); ctx.strokeStyle = hexA(T.ink, .45); ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke();
+      const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      ctx.font = font(18, 600); ctx.fillStyle = T.ink; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(lab, B[0] + ux * 20, B[1] + uy * 20);
+      ctx.font = font(14, 500); ctx.fillStyle = T.muted; ctx.fillText(`${f2(R[a][0])}–${f2(R[a][1])}`, B[0] + ux * 20, B[1] + uy * 20 + 17);
+    }
+    if (!on.length) { ctx.font = font(17, 500); ctx.fillStyle = T.muted; ctx.textAlign = "center"; ctx.fillText("Tick one or more rules below to plot them.", cx, cyy); return; }
+    // trajectories: one rule coloured by input (rose s = 1, teal s = 0); several rules coloured by rule
+    for (const r of on) { const o = this.runs[r];
+      if (!multi) {
+        for (const phase of [1, 0]) { ctx.strokeStyle = phase ? T.a : T.b; ctx.lineWidth = 2.5; ctx.beginPath(); let st = false;
+          for (let i = 0; i <= t; i++) { if (o.S[i] !== phase && !(phase === 0 && i === this.P.switchAt)) continue; const [x, y] = pt(o, i); st ? ctx.lineTo(x, y) : ctx.moveTo(x, y); st = true; }
+          ctx.stroke(); }
+      } else { ctx.strokeStyle = RULE_COLOR[r]; ctx.lineWidth = 2.2; ctx.beginPath();
+        for (let i = 0; i <= t; i++) { const [x, y] = pt(o, i); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); }
+      const [ex, ey] = pt(o, t); ctx.fillStyle = multi ? RULE_COLOR[r] : (sNow ? T.a : T.b); ctx.beginPath(); ctx.arc(ex, ey, multi ? 5 : 6, 0, 7); ctx.fill();
+    }
+  },
+  // Fig. 1a in miniature, top right: s → x0 —w→ x1. Node shade = activity; with one rule ticked,
+  // the connection's width and label follow that rule's w.
+  cartoon(ctx, cw, t, sNow) {
+    const o = this.on.length === 1 ? this.runs[this.on[0]] : null, y = 24, r = 13;
+    const xb = cw - r - 2, xa = xb - 118, xs = xa - r - 44, sc = sNow ? T.a : T.b;
+    const arrow = (x1, x2, col, lw) => { ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw; ctx.lineCap = "butt";
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2 - 8, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x2, y); ctx.lineTo(x2 - 10, y - 5.5); ctx.lineTo(x2 - 10, y + 5.5); ctx.closePath(); ctx.fill(); };
+    ctx.font = font(17, 600); ctx.fillStyle = sc; ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(sNow ? "s = 1" : "s = 0", xs, y);
+    arrow(xs + 6, xa - r - 3, sc, 2);
+    const wv = o ? o.W[t] : null;
+    arrow(xa + r + 3, xb - r - 3, hexA(T.ink, .7), o ? 1.5 + 3.5 * Math.min(1, wv / 1.2) : 2);
+    ctx.font = font(15, 600); ctx.fillStyle = T.ink; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText(o ? `w = ${wv.toFixed(2)}` : "w", (xa + xb) / 2, y - 8);
+    const node = (x, v, lab) => { ctx.fillStyle = mix(T.bg, T.ink, .06 + .55 * Math.min(1, v)); ctx.strokeStyle = T.ink; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.font = font(15, 600); ctx.fillStyle = T.ink; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(lab, x, y + r + 4); };
+    node(xa, this.runs.PC.X0[t], "x₀"); node(xb, o ? o.X1[t] : 0, "x₁");
+    ctx.lineCap = "round";
+  },
+  drawSeries(cv, R) {
+    const { ctx, w, h } = fit(cv), t = this.t, Tt = this.T, sw = this.P.switchAt, on = this.on, multi = this.multi();
+    const L = 46, Rp = multi ? 64 : 24, Tp = 30, B = 30, gap = 14, pw = w - L - Rp, ph = (h - Tp - B - 2 * gap) / 3;
+    if (pw < 60 || ph < 20) return;
+    const X = i => L + i / Tt * pw;
+    ctx.fillStyle = hexA(T.a, .85); ctx.fillRect(X(0), 6, X(sw) - X(0), 6);
+    ctx.fillStyle = hexA(T.b, .85); ctx.fillRect(X(sw), 6, X(Tt) - X(sw), 6);
+    ctx.font = font(15, 600); ctx.textBaseline = "top"; ctx.textAlign = "center";
+    ctx.fillStyle = T.a; ctx.fillText("s = 1", (X(0) + X(sw)) / 2, 15); ctx.fillStyle = T.b; ctx.fillText("s = 0", (X(sw) + X(Tt)) / 2, 15);
+    const rows = [["x₀", "x0", "X0"], ["w", "w", "W"], ["x₁", "x1", "X1"]];
+    rows.forEach(([lab, a, key], j) => {
+      const top = Tp + j * (ph + gap), [lo, hi] = R[a], Y = v => top + (1 - (v - lo) / (hi - lo)) * ph;
+      ctx.strokeStyle = hexA(T.muted, .35); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(L, top + ph + .5); ctx.lineTo(L + pw, top + ph + .5); ctx.stroke();
+      ctx.font = font(18, 600); ctx.fillStyle = T.ink; ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(lab, L - 14, top + ph / 2);
+      ctx.save(); ctx.beginPath(); ctx.rect(L, top - 2, pw, ph + 4); ctx.clip();
+      const ends = [];
+      for (const r of on) { const o = this.runs[r];
+        ctx.strokeStyle = multi ? RULE_COLOR[r] : T.ink; ctx.lineWidth = multi ? 2 : 2.5; ctx.lineJoin = "round"; ctx.beginPath();
+        for (let i = 0; i <= t; i++) { const x = X(i), y = Y(o[key][i]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke();
+        if (multi && a === "w") ends.push({ y: Y(o[key][t]), r }); }
+      ctx.restore();
+      if (ends.length) { ends.sort((p, q) => p.y - q.y);
+        for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 14) ends[i].y = ends[i - 1].y + 14;
+        ctx.font = font(13, 600); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        for (const e of ends) { ctx.fillStyle = RULE_COLOR[e.r]; ctx.fillText(RULE_NAME[e.r], X(t) + 8, e.y); } }
+    });
+    ctx.strokeStyle = hexA(T.ink, .3); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(t) + .5, Tp - 4); ctx.lineTo(X(t) + .5, Tp + 3 * ph + 2 * gap); ctx.stroke();
+    ctx.font = font(16, 500); ctx.fillStyle = T.muted; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (const v of [0, sw, Tt]) ctx.fillText(String(v), X(v), h - B + 8);
+  },
+};
+(() => {
+  const cv = $("p-traj"); let drag = null;
+  cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: PS.yaw, pitch: PS.pitch }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => { if (!drag) return; PS.yaw = drag.yaw + (e.clientX - drag.x) * .01; PS.pitch = Math.max(-1.3, Math.min(1.3, drag.pitch + (e.clientY - drag.y) * .01)); dirty = true; });
+  cv.addEventListener("pointerup", () => { drag = null; });
+  cv.addEventListener("dblclick", () => { PS.yaw = 0.72; PS.pitch = 0.36; dirty = true; });
+})();
+// ticking a rule replays the run so the ticked rules animate together
+function syncRules() {
+  PS.on = RULES.filter(r => document.querySelector(`#chks input[value="${r}"]`).checked);
+  PS.t = 0; if (cur === "passive") { playing = true; $("play").textContent = "Pause"; } dirty = true;
+}
+document.querySelectorAll("#chks input").forEach(i => i.addEventListener("change", syncRules));
+document.querySelectorAll("#rchks input").forEach(i => i.addEventListener("change", () => {
+  RS.rule = i.value; RS.reset(seeds.reward); started.reward = true; dirty = true;
+  if (cur === "reward") { playing = true; $("play").textContent = "Pause"; }
+}));
+
+// ---------------------------------------------------------------------------
 // App shell
 // ---------------------------------------------------------------------------
 const COVER = { T: 0, t: 0, rate: 0, reset() {}, done() { return true; }, draw() {} };
-const SC = { intro: COVER, reward: RS, churn: CH, continual: CL, openfield: OF };
+const SC = { intro: COVER, passive: PS, reward: RS, churn: CH, continual: CL, openfield: OF, adet: AD, amp: AM };
 let cur = "intro", playing = true, speedExp = 0, dirty = true;
 // one seed per tab; typed seeds are remembered in this browser
-let seeds = { intro: 1, reward: 1, churn: 1, continual: 1, openfield: 1 };
+let seeds = { intro: 1, passive: 1, reward: 1, churn: 1, continual: 1, openfield: 1, adet: 1, amp: 1 };
 try { Object.assign(seeds, JSON.parse(localStorage.getItem("seeds") || "{}")); } catch (e) {}
 function saveSeeds() { try { localStorage.setItem("seeds", JSON.stringify(seeds)); } catch (e) {} }
 // favourite seeds per tab, remembered in this browser
-let favs = { intro: [], reward: [], churn: [], continual: [], openfield: [] };
+let favs = { intro: [], passive: [], reward: [], churn: [], continual: [], openfield: [], adet: [], amp: [] };
 try { Object.assign(favs, JSON.parse(localStorage.getItem("favs") || "{}")); } catch (e) {}
 function syncFav() {
   const list = favs[cur] || [], on = list.includes(seeds[cur]);
@@ -777,7 +1290,8 @@ function show(tab) {
   document.querySelectorAll("nav a").forEach(a => a.setAttribute("aria-current", a.dataset.tab === tab ? "page" : "false"));
   document.querySelectorAll(".opt").forEach(o => o.hidden = o.dataset.for !== tab);
   const sec = $("tab-" + tab); $("title").textContent = sec.dataset.title;
-  const order = ["reward", "churn", "continual", "openfield"]; $("eyebrow").textContent = order.includes(tab) ? `Demo ${order.indexOf(tab) + 1} of 4` : ""; $("title").title = sec.dataset.info; $("clock").title = sec.dataset.info;
+  const order = ["passive", "reward", "churn", "continual", "openfield"], att = ["adet", "amp"];
+  $("eyebrow").textContent = order.includes(tab) ? `Demo ${order.indexOf(tab) + 1} of ${order.length}` : att.includes(tab) ? `Attractors · ${att.indexOf(tab) + 1} of ${att.length}` : ""; $("title").title = sec.dataset.info; $("clock").title = sec.dataset.info;
   $("seed").value = seeds[tab]; syncFav();
   if (!started[tab]) { SC[tab].reset(seeds[tab]); started[tab] = true; }
   playing = !SC[tab].done(); $("play").textContent = playing ? "Pause" : "Replay";
@@ -804,7 +1318,7 @@ addEventListener("keydown", e => {
   else if (e.key === "f" || e.key === "F") toggleFav();
   else if (e.key === "ArrowRight") setSpeed(speedExp + 1);
   else if (e.key === "ArrowLeft") setSpeed(speedExp - 1);
-  else if ("01234".includes(e.key) && e.key.length === 1) location.hash = ["intro", "reward", "churn", "continual", "openfield"][+e.key];
+  else if ("01234567".includes(e.key) && e.key.length === 1) location.hash = ["intro", "passive", "reward", "churn", "continual", "openfield", "adet", "amp"][+e.key];
 });
 addEventListener("hashchange", () => show(location.hash.slice(1)));
 addEventListener("resize", () => { dirty = true; });
@@ -829,5 +1343,5 @@ setSpeed(0);
 show(location.hash.slice(1) || "intro");
 requestAnimationFrame(frame);
 </script>
-</body>
-</html>
+
+</body></html>
