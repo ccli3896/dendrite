@@ -64,6 +64,12 @@ nav.seg .grp-lab { align-self: center; font-size: 10.5px; font-weight: 600; lett
 .cover .rule { display: flex; justify-content: center; gap: 6px; margin: 26px 0 22px; }
 .cover .rule i { width: 28px; height: 4px; border-radius: 2px; }
 .cover p { margin: 0 auto; max-width: 22em; font-size: clamp(19px, 2.6vh, 26px); color: var(--muted); line-height: 1.4; text-wrap: balance; }
+.cover .papers { list-style: none; margin: 40px auto 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.cover .papers a { display: inline-flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--ink); padding: 8px 14px; border-radius: 10px; }
+.cover .papers a:hover { background: var(--well); }
+.cover .papers .pt { font-size: clamp(15px, 2vh, 18px); font-weight: 500; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.cover .papers a:hover .pt { text-decoration-color: var(--a); }
+.cover .papers .pm { font-size: 13px; color: var(--muted); }
 body.on-cover .head, body.on-cover footer, body.on-cover .brand { visibility: hidden; }
 .cv { position: relative; min-width: 0; min-height: 160px; }
 canvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -131,6 +137,10 @@ input[type=range] { accent-color: var(--ink); width: 104px; }
       <h2>Hebbian steering</h2>
       <div class="rule"><i style="background:var(--a)"></i><i style="background:var(--b)"></i></div>
       <p>Reward-seeking behavior emerges from local dynamics</p>
+      <ul class="papers" aria-label="Papers">
+        <li><a href="https://www.biorxiv.org/content/10.64898/2026.11.18.767638v1" target="_blank" rel="noopener"><span class="pt">Reward-seeking behavior emerges from Hebbian-like plasticity</span><span class="pm">Li et al. 2026 · bioRxiv</span></a></li>
+        <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11142161/pdf/nihpp-2024.05.22.595306v1.pdf" target="_blank" rel="noopener"><span class="pt">Neuron-level prediction and noise can implement flexible reward-seeking behavior</span><span class="pm">Li et al. 2024 · bioRxiv (PDF) · open-field demo</span></a></li>
+      </ul>
     </div>
   </section>
   <section class="tab" id="tab-passive" data-blurb="Two neurons joined by one plastic weight w. The input x₀ is driven on (s = 1), then off (s = 0). Every rule gets the same input and noise, so differences in x₀, x₁ and w come from the rule alone." data-title="Same input, different rules" hidden style="grid-template-rows:auto minmax(0,1fr);column-gap:36px;row-gap:16px"
